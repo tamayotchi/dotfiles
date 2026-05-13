@@ -1,7 +1,6 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-CONFIG_PATH="${HM_MCP_CONFIG_PATH:-$HOME/hm/.pi/mcp.json}"
 CACHE_DIR="$HOME/.cache/hm"
 LOG_FILE="$CACHE_DIR/ha-mcp-web.log"
 STARTED_SERVER_PID=""
@@ -13,36 +12,14 @@ require_cmd() {
   fi
 }
 
-read_ha_env() {
-  python - "$CONFIG_PATH" <<'PY'
-import json, os, sys
-path = os.path.expanduser(sys.argv[1])
-if not os.path.exists(path):
-    print(f"hm: MCP config not found: {path}", file=sys.stderr)
-    sys.exit(1)
-with open(path, "r", encoding="utf-8") as f:
-    data = json.load(f)
-server = (data.get("mcpServers") or {}).get("home-assistant")
-if not server:
-    print(f"hm: home-assistant MCP server is not configured in {path}", file=sys.stderr)
-    sys.exit(1)
-env = server.get("env") or {}
-url = env.get("HOMEASSISTANT_URL")
-token = env.get("HOMEASSISTANT_TOKEN")
-if not url or not token:
-    print("hm: HOMEASSISTANT_URL or HOMEASSISTANT_TOKEN missing in MCP config", file=sys.stderr)
-    sys.exit(1)
-print(url)
-print(token)
-PY
-}
 start_server() {
   require_cmd uvx
   mkdir -p "$CACHE_DIR"
 
-  mapfile -t ha_env < <(read_ha_env)
-  export HOMEASSISTANT_URL="${ha_env[0]}"
-  export HOMEASSISTANT_TOKEN="${ha_env[1]}"
+  if [[ -z "${HOMEASSISTANT_URL:-}" || -z "${HOMEASSISTANT_TOKEN:-}" ]]; then
+    echo "hm: HOMEASSISTANT_URL or HOMEASSISTANT_TOKEN not exported" >&2
+    exit 1
+  fi
 
   if pgrep -f "[h]a-mcp-web" >/dev/null 2>&1; then
     echo "hm: reusing existing Home Assistant MCP web server" >&2

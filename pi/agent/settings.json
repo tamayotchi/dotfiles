@@ -1,8 +1,4 @@
 {
-  "autocompleteMaxVisible": 7,
-  "compaction": {
-    "enabled": false
-  },
   "defaultModel": "moonshotai/kimi-k2.6",
   "defaultProvider": "openrouter",
   "defaultThinkingLevel": "high",
@@ -13,15 +9,8 @@
     "openrouter/moonshotai/kimi-k2.6"
   ],
   "hideThinkingBlock": true,
-  "images": {
-    "blockImages": false
-  },
   "lastChangelogVersion": "0.74.0",
-  "packages": [
-    "~/.pi",
-    "npm:@plannotator/pi-extension",
-    "npm:pi-web-access"
-  ],
+  "packages": ["~/.pi", "npm:@plannotator/pi-extension", "npm:pi-web-access"],
   "retry": {
     "enabled": false
   },
