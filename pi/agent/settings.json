@@ -3,8 +3,8 @@
   "compaction": {
     "enabled": false
   },
-  "defaultModel": "gpt-5.5",
-  "defaultProvider": "openai-codex",
+  "defaultModel": "moonshotai/kimi-k2.6",
+  "defaultProvider": "openrouter",
   "defaultThinkingLevel": "high",
   "editorPaddingX": 0,
   "enabledModels": [

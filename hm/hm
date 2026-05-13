@@ -15,35 +15,27 @@ require_cmd() {
 
 read_ha_env() {
   python - "$CONFIG_PATH" <<'PY'
-import json
-import os
-import sys
-
+import json, os, sys
 path = os.path.expanduser(sys.argv[1])
 if not os.path.exists(path):
     print(f"hm: MCP config not found: {path}", file=sys.stderr)
     sys.exit(1)
-
 with open(path, "r", encoding="utf-8") as f:
     data = json.load(f)
-
 server = (data.get("mcpServers") or {}).get("home-assistant")
 if not server:
     print(f"hm: home-assistant MCP server is not configured in {path}", file=sys.stderr)
     sys.exit(1)
-
 env = server.get("env") or {}
 url = env.get("HOMEASSISTANT_URL")
 token = env.get("HOMEASSISTANT_TOKEN")
 if not url or not token:
     print("hm: HOMEASSISTANT_URL or HOMEASSISTANT_TOKEN missing in MCP config", file=sys.stderr)
     sys.exit(1)
-
 print(url)
 print(token)
 PY
 }
-
 start_server() {
   require_cmd uvx
   mkdir -p "$CACHE_DIR"
