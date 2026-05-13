@@ -31,38 +31,3 @@ cd ~/dotfiles
 
 The installer creates backups before replacing existing files/directories.
 
-## Update tracked configs from the live system
-
-```bash
-cd ~/dotfiles
-rsync -a --delete ~/.config/tmux/tmux.conf tmux/tmux.conf
-rsync -a --delete --exclude .git/ ~/hm/ hm/
-rsync -a --delete \
-  --exclude='.git/' \
-  --exclude='node_modules/' \
-  --exclude='*.log' \
-  --exclude='.DS_Store' \
-  --exclude='agent/auth.json' \
-  --exclude='agent/mcp-cache.json' \
-  --exclude='agent/models.json' \
-  --exclude='agent/extensions/' \
-  --exclude='agent/git/' \
-  --exclude='agent/sessions/' \
-  --exclude='agent/skills/' \
-  --exclude='exa-usage.json' \
-  --exclude='web-search.json' \
-  ~/.pi/ pi/
-```
-
-Then commit and push:
-
-```bash
-git status
-git add -A
-git commit -m "Update dotfiles"
-git push
-```
-
-## Notes
-
-`pi-workspace` is no longer needed for this setup because the safe Pi config lives here under `pi/`. Do not commit Pi auth files, caches, sessions, or local usage data.
