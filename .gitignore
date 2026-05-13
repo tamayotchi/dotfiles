@@ -1,1 +1,18 @@
-nvim/plugged
+# General
+.DS_Store
+*.log
+node_modules/
+
+# Pi runtime and secrets if they are ever copied accidentally
+pi/exa-usage.json
+pi/web-search.json
+pi/agent/auth.json
+pi/agent/mcp-cache.json
+pi/agent/models.json
+pi/agent/extensions/
+pi/agent/git/
+pi/agent/sessions/
+pi/agent/skills/
+
+# Local editor/cache files
+.cache/

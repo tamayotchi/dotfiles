@@ -1,0 +1,31 @@
+{
+  "autocompleteMaxVisible": 7,
+  "compaction": {
+    "enabled": false
+  },
+  "defaultModel": "gpt-5.5",
+  "defaultProvider": "openai-codex",
+  "defaultThinkingLevel": "high",
+  "editorPaddingX": 0,
+  "enabledModels": [
+    "openai-codex/gpt-5.5",
+    "github-copilot/gpt-5.4",
+    "openrouter/moonshotai/kimi-k2.6"
+  ],
+  "hideThinkingBlock": true,
+  "images": {
+    "blockImages": false
+  },
+  "lastChangelogVersion": "0.74.0",
+  "packages": [
+    "~/.pi",
+    "npm:@plannotator/pi-extension",
+    "npm:pi-web-access"
+  ],
+  "retry": {
+    "enabled": false
+  },
+  "steeringMode": "all",
+  "theme": "dark",
+  "transport": "sse"
+}

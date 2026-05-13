@@ -1,0 +1,13 @@
+node_modules/
+*.log
+.DS_Store
+
+# Pi runtime and secrets
+/exa-usage.json
+/web-search.json
+
+# Keep only selected safe agent files in git
+/agent/*
+!/agent/settings.json
+!/agent/APPEND_SYSTEM.md
+!/agent/keybindings.json

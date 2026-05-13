@@ -1,0 +1,20 @@
+{
+  "name": "tamayotchi-pi-workspace",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Pi package and global settings living in ~/.pi.",
+  "keywords": ["pi-package", "local"],
+  "pi": {
+    "extensions": ["./extensions"],
+    "skills": ["./skills"],
+    "prompts": ["./prompts"],
+    "themes": ["./themes"]
+  },
+  "peerDependencies": {
+    "@mariozechner/pi-ai": "*",
+    "@mariozechner/pi-coding-agent": "*",
+    "@mariozechner/pi-tui": "*",
+    "@sinclair/typebox": "*"
+  }
+}
