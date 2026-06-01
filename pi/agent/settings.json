@@ -1,14 +1,14 @@
 {
-  "defaultModel": "gpt-5.5",
-  "defaultProvider": "openai-codex",
+  "defaultModel": "kimi-k2.6",
+  "defaultProvider": "opencode-go",
   "defaultThinkingLevel": "high",
   "editorPaddingX": 0,
   "enabledModels": [
-    "openrouter/moonshotai/kimi-k2.6",
-    "openai-codex/gpt-5.5"
+    "openai-codex/gpt-5.5",
+    "opencode-go/kimi-k2.6"
   ],
   "hideThinkingBlock": true,
-  "lastChangelogVersion": "0.74.0",
+  "lastChangelogVersion": "0.76.0",
   "packages": [
     "~/.pi",
     "npm:@plannotator/pi-extension",
