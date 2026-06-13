@@ -1,8 +1,11 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 CACHE_DIR="$HOME/.cache/hm"
 LOG_FILE="$CACHE_DIR/ha-mcp-web.log"
+SERVER_HOST="127.0.0.1"
+SERVER_PORT="8086"
 STARTED_SERVER_PID=""
 
 require_cmd() {
@@ -23,12 +26,28 @@ start_server() {
 
   if pgrep -f "[h]a-mcp-web" >/dev/null 2>&1; then
     echo "hm: reusing existing Home Assistant MCP web server" >&2
+    wait_for_server
     return 0
   fi
 
   echo "hm: starting temporary Home Assistant MCP web server..." >&2
   uvx --from ha-mcp@latest ha-mcp-web >>"$LOG_FILE" 2>&1 &
   STARTED_SERVER_PID="$!"
+  wait_for_server
+}
+
+wait_for_server() {
+  local i
+  for i in {1..50}; do
+    if (echo >"/dev/tcp/$SERVER_HOST/$SERVER_PORT") >/dev/null 2>&1; then
+      return 0
+    fi
+    sleep 0.2
+  done
+
+  echo "hm: Home Assistant MCP web server did not become ready on $SERVER_HOST:$SERVER_PORT" >&2
+  echo "hm: log: $LOG_FILE" >&2
+  exit 1
 }
 
 cleanup() {
@@ -59,8 +78,10 @@ main() {
     exit 0
   fi
 
-  cd "$HOME"
-  pi "$(build_prompt "$@")"
+  # Run pi from this wrapper's directory so the local .pi/settings.json and
+  # .pi/mcp.json are loaded only for hm, not from the main ~/.pi config.
+  cd "$SCRIPT_DIR"
+  pi --approve "$(build_prompt "$@")"
 }
 
 main "$@"
