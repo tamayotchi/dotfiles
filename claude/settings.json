@@ -1,4 +1,6 @@
 {
-  "theme": "dark",
-  "skipDangerousModePermissionPrompt": true
+  "model": "opus[1m]",
+  "effortLevel": "xhigh",
+  "skipDangerousModePermissionPrompt": true,
+  "theme": "dark"
 }
