@@ -24,11 +24,11 @@ rename_tab = "prefix+R"
 navigate_workspace_up = "k"
 navigate_workspace_down = "j"
 
-# Pane navigation — add direct ctrl+hjkl (tmux: bind-key -n C-h/j/k/l select-pane)
-focus_pane_left = ["prefix+h", "ctrl+h"]
-focus_pane_down = ["prefix+j", "ctrl+j"]
-focus_pane_up = ["prefix+k", "ctrl+k"]
-focus_pane_right = ["prefix+l", "ctrl+l"]
+# Pane navigation
+focus_pane_left = "prefix+h"
+focus_pane_down = "prefix+j"
+focus_pane_up = "prefix+k"
+focus_pane_right = "prefix+l"
 
 [ui]
 prompt_new_tab_name = false

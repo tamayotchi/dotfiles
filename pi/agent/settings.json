@@ -9,7 +9,7 @@
     "opencode-go/kimi-k2.7-code"
   ],
   "hideThinkingBlock": false,
-  "lastChangelogVersion": "0.79.3",
+  "lastChangelogVersion": "0.81.1",
   "packages": [
     "~/.pi",
     "npm:@plannotator/pi-extension",
