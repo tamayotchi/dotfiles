@@ -14,22 +14,35 @@ split_horizontal = "prefix+-"
 
 # Workspace
 new_workspace = "prefix+t"
-close_workspace = "prefix+shift+x"
+close_workspace = "prefix+shift+d"
+previous_workspace = "prefix+["
+next_workspace = "prefix+]"
 
 # Tabs
-close_tab = "prefix+X"
+close_tab = "prefix+shift+x"
 rename_tab = "prefix+R"
+previous_tab = "prefix+,"
+next_tab = "prefix+."
 
 # Workspace navigation
 navigate_workspace_up = "k"
 navigate_workspace_down = "j"
 
-# Pane navigation
+# Pane navigation — use only prefix+hjkl; keep ctrl+hjkl free for terminal apps.
 focus_pane_left = "prefix+h"
 focus_pane_down = "prefix+j"
 focus_pane_up = "prefix+k"
 focus_pane_right = "prefix+l"
 
+# Popups
+[[keys.command]]
+key = "prefix+alt+g"
+type = "popup"
+command = "lazygit"
+width = "90%"
+height = "90%"
+
 [ui]
 prompt_new_tab_name = false
 agent_panel_sort = "priority"
+show_agent_labels_on_pane_borders = true
