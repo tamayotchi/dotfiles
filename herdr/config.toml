@@ -46,3 +46,6 @@ height = "90%"
 prompt_new_tab_name = false
 agent_panel_sort = "priority"
 show_agent_labels_on_pane_borders = true
+
+[session]
+resume_agents_on_restore = true
