@@ -6,7 +6,7 @@
   "description": "Pi package and global settings living in ~/.pi.",
   "keywords": ["pi-package", "local"],
   "pi": {
-    "extensions": ["./extensions"],
+    "extensions": ["./extensions/english-sidecar/index.ts"],
     "skills": ["./skills"],
     "prompts": ["./prompts"],
     "themes": ["./themes"]

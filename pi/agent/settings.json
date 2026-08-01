@@ -1,18 +1,16 @@
 {
-  "defaultModel": "gpt-5.5",
+  "defaultModel": "gpt-5.6-luna",
   "defaultProvider": "github-copilot",
-  "defaultThinkingLevel": "high",
+  "defaultThinkingLevel": "xhigh",
   "editorPaddingX": 0,
   "enabledModels": [
-    "openai-codex/gpt-5.5",
-    "github-copilot/gpt-5.5",
-    "opencode-go/kimi-k2.7-code"
+    "opencode-go/kimi-k2.7-code",
+    "github-copilot/gpt-5.6-luna"
   ],
   "hideThinkingBlock": false,
-  "lastChangelogVersion": "0.81.1",
+  "lastChangelogVersion": "0.83.0",
   "packages": [
     "~/.pi",
-    "npm:@plannotator/pi-extension",
     "npm:pi-web-access"
   ],
   "retry": {
