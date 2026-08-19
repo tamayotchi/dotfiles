@@ -1,14 +1,10 @@
 {
-  "defaultModel": "gpt-5.6-luna",
+  "defaultModel": "gpt-5.6-sol",
   "defaultProvider": "github-copilot",
-  "defaultThinkingLevel": "xhigh",
+  "defaultThinkingLevel": "high",
   "editorPaddingX": 0,
-  "enabledModels": [
-    "opencode-go/kimi-k2.7-code",
-    "github-copilot/gpt-5.6-luna"
-  ],
-  "hideThinkingBlock": false,
-  "lastChangelogVersion": "0.83.0",
+  "hideThinkingBlock": true,
+  "lastChangelogVersion": "0.84.2",
   "packages": [
     "~/.pi",
     "npm:pi-web-access"

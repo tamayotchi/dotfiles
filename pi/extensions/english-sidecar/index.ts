@@ -46,7 +46,7 @@ interface CoachConfig {
   coachWindowShortcut: string;
   coachWindowWidth: SizeValue;
   maxChars: number;
-  model?: string;
+  models: string[];
   popupMaxHeight: SizeValue;
   popupWidth: number;
   thinking: string;
@@ -95,7 +95,10 @@ const CONFIG: CoachConfig = {
   coachWindowShortcut: "ctrl+shift+alt+e",
   coachWindowWidth: "96%",
   maxChars: 4_000,
-  // model: "your-model-name",
+  models: [
+    "google/gemini-3.5-flash-lite",
+    "openrouter/openrouter/free",
+  ],
   popupMaxHeight: "80%",
   popupWidth: 52,
   thinking: "off",
@@ -107,6 +110,8 @@ const CONFIG: CoachConfig = {
 const MAX_STDERR_CHARS = 8_000;
 const MIN_POPUP_WIDTH = 24;
 const MIN_INNER_WIDTH = 10;
+const MODEL_SETUP_MESSAGE =
+  "English sidecar needs a configured model. Run /login google or /login openrouter, then enable it with /english on.";
 
 const ENGLISH_COACH_SYSTEM_PROMPT = `You are an English-learning feedback assistant.
 
@@ -339,9 +344,49 @@ function getPiInvocation(args: string[]): { command: string; args: string[] } {
     : { command: process.execPath, args };
 }
 
+function extractAssistantError(message: unknown): string {
+  const msg = toJsonObject(message);
+  return msg?.role === "assistant" &&
+    msg.stopReason === "error" &&
+    typeof msg.errorMessage === "string"
+    ? msg.errorMessage.trim()
+    : "";
+}
+
+function getModelFallbackReason(error: unknown): string | undefined {
+  const message = error instanceof Error ? error.message : String(error);
+
+  if (
+    /(?:\b429\b|rate[ _-]?limit|resource[ _-]?exhausted|quota (?:exceeded|exhausted)|too many requests)/i.test(
+      message,
+    )
+  ) {
+    return "rate limit";
+  }
+
+  if (
+    /(?:\b40[13]\b|api[ _-]?key[ _-]?invalid|api key not valid|invalid api key|unauthorized|authentication (?:failed|required)|permission[ _-]?denied|no api key)/i.test(
+      message,
+    )
+  ) {
+    return "authentication failure";
+  }
+
+  if (
+    /(?:\b404\b|not[ _-]?found|model .+ no longer available|model .+ unavailable)/i.test(
+      message,
+    )
+  ) {
+    return "model unavailable";
+  }
+
+  return undefined;
+}
+
 function buildSidecarArgs(
   text: string,
   config: CoachConfig,
+  model: string | undefined,
   systemPrompt = ENGLISH_COACH_SYSTEM_PROMPT,
 ): string[] {
   const args = [
@@ -362,21 +407,24 @@ function buildSidecarArgs(
     "",
   ];
 
-  if (config.model) args.push("--model", config.model);
+  if (model) args.push("--model", model);
   if (config.thinking) args.push("--thinking", config.thinking);
 
   args.push(text);
   return args;
 }
 
-async function runSidecar(
+async function runSidecarOnce(
   text: string,
   cwd: string,
   config: CoachConfig,
+  model: string | undefined,
   onProcess: (proc: ChildProcess) => void,
   systemPrompt = ENGLISH_COACH_SYSTEM_PROMPT,
 ): Promise<string> {
-  const invocation = getPiInvocation(buildSidecarArgs(text, config, systemPrompt));
+  const invocation = getPiInvocation(
+    buildSidecarArgs(text, config, model, systemPrompt),
+  );
 
   return await new Promise<string>((resolve, reject) => {
     const proc = spawn(invocation.command, invocation.args, {
@@ -389,6 +437,7 @@ async function runSidecar(
     let stdoutBuffer = "";
     let stderr = "";
     let finalText = "";
+    let providerError = "";
     let settled = false;
     let timedOut = false;
 
@@ -422,7 +471,9 @@ async function runSidecar(
       const event = toJsonObject(parsed);
       if (event?.type === "message_end") {
         const text = extractAssistantText(event.message);
+        const error = extractAssistantError(event.message);
         if (text) finalText = text;
+        if (error) providerError = error;
       }
     };
 
@@ -457,9 +508,11 @@ async function runSidecar(
           return;
         }
 
-        if (code !== 0 && !finalText) {
+        if (!finalText && (providerError || code !== 0)) {
           reject(
-            new Error(stderr.trim() || `sidecar exited with code ${code}`),
+            new Error(
+              providerError || stderr.trim() || `sidecar exited with code ${code}`,
+            ),
           );
           return;
         }
@@ -915,6 +968,66 @@ export default function englishSidecarExtension(pi: ExtensionAPI) {
   let coachWindowGeneration = 0;
   let coachProcess: ChildProcess | null = null;
   let coachRequestId = 0;
+  let activeModelIndex = 0;
+  let availableSidecarModels: string[] = [];
+
+  const refreshAvailableSidecarModels = (ctx: ExtensionContext): string[] => {
+    const availableModels = ctx.modelRegistry.getAvailable();
+    availableSidecarModels = config.models.filter((modelSpec) => {
+      const separatorIndex = modelSpec.indexOf("/");
+      if (separatorIndex === -1) {
+        return availableModels.some((model) => model.id === modelSpec);
+      }
+
+      const provider = modelSpec.slice(0, separatorIndex);
+      const modelId = modelSpec.slice(separatorIndex + 1);
+      return availableModels.some(
+        (model) => model.provider === provider && model.id === modelId,
+      );
+    });
+    return availableSidecarModels;
+  };
+
+  const runConfiguredSidecar = async (
+    text: string,
+    ctx: ExtensionContext,
+    onProcess: (proc: ChildProcess) => void,
+    systemPrompt = ENGLISH_COACH_SYSTEM_PROMPT,
+  ): Promise<string> => {
+    const models = refreshAvailableSidecarModels(ctx);
+    if (models.length === 0) throw new Error(MODEL_SETUP_MESSAGE);
+
+    for (let attempt = 0; attempt < models.length; attempt++) {
+      const modelIndex = activeModelIndex % models.length;
+      const model = models[modelIndex];
+
+      try {
+        return await runSidecarOnce(
+          text,
+          ctx.cwd,
+          config,
+          model,
+          onProcess,
+          systemPrompt,
+        );
+      } catch (error) {
+        const fallbackReason = getModelFallbackReason(error);
+        if (!fallbackReason) throw error;
+
+        if (attempt === models.length - 1) {
+          throw new Error(
+            `English sidecar could not use ${model}: ${fallbackReason}. Run /login google or /login openrouter to update your credentials.`,
+          );
+        }
+
+        // Fail over silently. The user only needs an error if every configured
+        // model fails.
+        activeModelIndex = (modelIndex + 1) % models.length;
+      }
+    }
+
+    throw new Error("No English sidecar model is available.");
+  };
 
   const stopActiveProcess = () => {
     if (activeProcess && !activeProcess.killed) activeProcess.kill("SIGTERM");
@@ -965,6 +1078,14 @@ export default function englishSidecarExtension(pi: ExtensionAPI) {
     ctx: ExtensionContext,
     phase: Exclude<PopupPhase, "ready"> | undefined = getCurrentStatusPhase(),
   ) => {
+    if (availableSidecarModels.length === 0) {
+      ctx.ui.setStatus(
+        STATUS_KEY,
+        "English: setup required (/login google or /login openrouter)",
+      );
+      return;
+    }
+
     ctx.ui.setStatus(
       STATUS_KEY,
       getStatusText(enabled, config, popupVisible, phase),
@@ -1190,10 +1311,9 @@ export default function englishSidecarExtension(pi: ExtensionAPI) {
     stopCoachProcess();
     const prompt = buildCoachChatPrompt(coachWindowState.messages, latestPopupState);
 
-    void runSidecar(
+    void runConfiguredSidecar(
       prompt,
-      ctx.cwd,
-      config,
+      ctx,
       (proc) => {
         coachProcess = proc;
       },
@@ -1224,6 +1344,19 @@ export default function englishSidecarExtension(pi: ExtensionAPI) {
   };
 
   const setEnabled = (nextEnabled: boolean, ctx: ExtensionContext) => {
+    if (nextEnabled && refreshAvailableSidecarModels(ctx).length === 0) {
+      enabled = false;
+      persistEnabled();
+      activeRequestId++;
+      coachRequestId++;
+      stopActiveProcess();
+      stopCoachProcess();
+      clearUi(ctx);
+      setStatus(ctx);
+      ctx.ui.notify(MODEL_SETUP_MESSAGE, "error");
+      return;
+    }
+
     enabled = nextEnabled;
     persistEnabled();
 
@@ -1271,7 +1404,7 @@ export default function englishSidecarExtension(pi: ExtensionAPI) {
       ctx,
     );
 
-    void runSidecar(text, ctx.cwd, config, (proc) => {
+    void runConfiguredSidecar(text, ctx, (proc) => {
       activeProcess = proc;
     })
       .then((feedback) => {
@@ -1323,6 +1456,7 @@ export default function englishSidecarExtension(pi: ExtensionAPI) {
 
   pi.on("session_start", (_event, ctx) => {
     disposed = false;
+    refreshAvailableSidecarModels(ctx);
 
     for (const entry of ctx.sessionManager.getBranch()) {
       if (entry.type !== "custom" || entry.customType !== SETTINGS_ENTRY_TYPE)
@@ -1335,7 +1469,13 @@ export default function englishSidecarExtension(pi: ExtensionAPI) {
     ctx.ui.setWidget(LEGACY_WIDGET_KEY, undefined, {
       placement: "belowEditor",
     });
-    if (ctx.hasUI) setStatus(ctx);
+    if (ctx.hasUI) {
+      if (availableSidecarModels.length === 0) {
+        enabled = false;
+        ctx.ui.notify(MODEL_SETUP_MESSAGE, "error");
+      }
+      setStatus(ctx);
+    }
   });
 
   pi.registerShortcut(config.toggleShortcut, {
