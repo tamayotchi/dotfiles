@@ -72,7 +72,7 @@ const STATUS_KEY = "english-sidecar";
 const LEGACY_WIDGET_KEY = "english-sidecar";
 const SETTINGS_ENTRY_TYPE = "english-sidecar-settings";
 
-const ENABLED_ON_STARTUP = false;
+const ENABLED_ON_STARTUP = true;
 
 const CONFIG: CoachConfig = {
   aiColor: "97",
