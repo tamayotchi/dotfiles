@@ -77,18 +77,15 @@ const ENABLED_ON_STARTUP = true;
 const CONFIG: CoachConfig = {
   aiColor: "97",
   coachWindowMaxHeight: "95%",
-  coachWindowShortcut: "ctrl+shift+alt+e",
+  coachWindowShortcut: "ctrl+k",
   coachWindowWidth: "96%",
   maxChars: 4_000,
-  models: [
-    "google/gemini-3.5-flash-lite",
-    "openrouter/openrouter/free",
-  ],
+  models: ["google/gemini-3.5-flash-lite", "openrouter/openrouter/free"],
   popupMaxHeight: "80%",
   popupWidth: 68,
   thinking: "off",
   timeoutMs: 45_000,
-  toggleShortcut: "ctrl+shift+e",
+  toggleShortcut: "ctrl+e",
   userColor: "33",
 };
 
@@ -259,11 +256,16 @@ function isBackspaceKey(data: string): boolean {
   return data === "\x7f" || data === "\b";
 }
 
-function isDefaultCoachWindowShortcut(data: string, config: CoachConfig): boolean {
-  if (config.coachWindowShortcut !== "ctrl+shift+alt+e") return false;
+function isDefaultCoachWindowShortcut(
+  data: string,
+  config: CoachConfig,
+): boolean {
+  if (config.coachWindowShortcut !== "ctrl+k") return false;
+  // ctrl+k: legacy 0x0b, or Kitty CSI-u form ESC[107;5u (107='k', modifier 5=ctrl).
   return (
-    /^\x1b\[(?:101|69)(?::\d*){0,2};8(?::[12])?u$/.test(data) ||
-    /^\x1b\[27;8;(?:101|69)~$/.test(data)
+    data === "\x0b" ||
+    /^\x1b\[107(?::\d*){0,2};5(?::[12])?u$/.test(data) ||
+    /^\x1b\[27;5;107~$/.test(data)
   );
 }
 
@@ -487,7 +489,9 @@ async function runSidecarOnce(
         if (!finalText && (providerError || code !== 0)) {
           reject(
             new Error(
-              providerError || stderr.trim() || `sidecar exited with code ${code}`,
+              providerError ||
+                stderr.trim() ||
+                `sidecar exited with code ${code}`,
             ),
           );
           return;
@@ -505,7 +509,7 @@ function buildCoachChatPrompt(
 ): string {
   const reviewFeedback = reviewContext?.review
     ? formatEnglishReview(reviewContext.review)
-    : reviewContext?.error ?? "Feedback is not ready yet.";
+    : (reviewContext?.error ?? "Feedback is not ready yet.");
   const review = reviewContext
     ? `Latest English review context:\nLearner's original message:\n${reviewContext.userText}\n\nCoach feedback:\n${reviewFeedback}`
     : "No previous English review context is available.";
@@ -561,7 +565,10 @@ function renderReviewTokenLines(
           styleReviewToken(
             theme,
             config,
-            { ...token, text: characters.slice(offset, offset + maxWidth).join("") },
+            {
+              ...token,
+              text: characters.slice(offset, offset + maxWidth).join(""),
+            },
             variant,
           ),
         );
@@ -580,8 +587,7 @@ function renderReviewTokenLines(
       separator = "";
     }
 
-    currentLine +=
-      separator + styleReviewToken(theme, config, token, variant);
+    currentLine += separator + styleReviewToken(theme, config, token, variant);
     currentWidth += separator.length + characters.length;
   }
 
@@ -697,7 +703,10 @@ function renderEnglishReviewContent(
   }
 
   if (state.truncatedInput) {
-    lines.push("", ` ${theme.fg("dim", "The input was truncated before review.")}`);
+    lines.push(
+      "",
+      ` ${theme.fg("dim", "The input was truncated before review.")}`,
+    );
   }
   return lines;
 }
@@ -872,8 +881,13 @@ class EnglishCoachWindow implements Component {
     lines.push(this.theme.fg("border", `╭${"─".repeat(innerWidth)}╮`));
     lines.push(row(` ${this.renderTitle()}`));
 
-    const transcriptLines = this.buildTranscriptLines(Math.max(8, innerWidth - 2));
-    const maxScrollOffset = Math.max(0, transcriptLines.length - transcriptRows);
+    const transcriptLines = this.buildTranscriptLines(
+      Math.max(8, innerWidth - 2),
+    );
+    const maxScrollOffset = Math.max(
+      0,
+      transcriptLines.length - transcriptRows,
+    );
     this.state.scrollOffset = Math.min(
       Math.max(0, this.state.scrollOffset),
       maxScrollOffset,
@@ -882,12 +896,19 @@ class EnglishCoachWindow implements Component {
       0,
       transcriptLines.length - transcriptRows - this.state.scrollOffset,
     );
-    const visibleTranscript = transcriptLines.slice(start, start + transcriptRows);
+    const visibleTranscript = transcriptLines.slice(
+      start,
+      start + transcriptRows,
+    );
 
     for (const line of visibleTranscript) lines.push(row(line));
     while (lines.length < transcriptRows + 2) lines.push(row());
 
-    lines.push(row(` ${this.theme.fg("borderMuted", "─".repeat(Math.max(0, innerWidth - 2)))}`));
+    lines.push(
+      row(
+        ` ${this.theme.fg("borderMuted", "─".repeat(Math.max(0, innerWidth - 2)))}`,
+      ),
+    );
     lines.push(row(this.renderInputLine(innerWidth)));
     lines.push(row(this.renderStatusLine(maxScrollOffset)));
     lines.push(row(this.renderHelpLine()));
@@ -902,8 +923,15 @@ class EnglishCoachWindow implements Component {
   private createRowRenderer(innerWidth: number): (content?: string) => string {
     return (content = "") => {
       const clipped = truncateToWidth(content, innerWidth, "…");
-      const padding = " ".repeat(Math.max(0, innerWidth - visibleWidth(clipped)));
-      return this.theme.fg("border", "│") + clipped + padding + this.theme.fg("border", "│");
+      const padding = " ".repeat(
+        Math.max(0, innerWidth - visibleWidth(clipped)),
+      );
+      return (
+        this.theme.fg("border", "│") +
+        clipped +
+        padding +
+        this.theme.fg("border", "│")
+      );
     };
   }
 
@@ -929,12 +957,16 @@ class EnglishCoachWindow implements Component {
           ` ${this.theme.fg("dim", "Ask a follow-up question about this review.")}`,
         );
       } else {
-        lines.push(` ${this.theme.fg("dim", "Ask me anything about English here.")}`);
+        lines.push(
+          ` ${this.theme.fg("dim", "Ask me anything about English here.")}`,
+        );
         lines.push(` ${this.theme.fg("dim", "Examples:")}`);
         lines.push(
           ` ${this.theme.fg("dim", "• Why is this correction more natural?")}`,
         );
-        lines.push(` ${this.theme.fg("dim", "• Can you give me more examples?")}`);
+        lines.push(
+          ` ${this.theme.fg("dim", "• Can you give me more examples?")}`,
+        );
         lines.push(
           ` ${this.theme.fg("dim", "• How can I say this more politely?")}`,
         );
@@ -980,8 +1012,16 @@ class EnglishCoachWindow implements Component {
   ): void {
     const label = message.role === "user" ? "You:" : "Coach:";
     const labelColor = message.role === "user" ? "accent" : "success";
-    const textColor = message.role === "user" ? this.config.userColor : this.config.aiColor;
-    this.pushLabeledWrappedLines(lines, label, message.text, textColor, width, labelColor);
+    const textColor =
+      message.role === "user" ? this.config.userColor : this.config.aiColor;
+    this.pushLabeledWrappedLines(
+      lines,
+      label,
+      message.text,
+      textColor,
+      width,
+      labelColor,
+    );
   }
 
   private pushLabeledWrappedLines(
@@ -1011,14 +1051,21 @@ class EnglishCoachWindow implements Component {
     }
 
     const placeholder = this.theme.fg("dim", "Ask an English question…");
-    const input = this.state.input ? ansiColor(this.state.input, this.config.userColor) : placeholder;
+    const input = this.state.input
+      ? ansiColor(this.state.input, this.config.userColor)
+      : placeholder;
     const cursor = this.theme.fg("accent", "█");
-    return truncateToWidth(` ${this.theme.fg("accent", ">")} ${input}${cursor}`, innerWidth, "…");
+    return truncateToWidth(
+      ` ${this.theme.fg("accent", ">")} ${input}${cursor}`,
+      innerWidth,
+      "…",
+    );
   }
 
   private renderStatusLine(maxScrollOffset: number): string {
     if (this.state.error) return ` ${this.theme.fg("error", this.state.error)}`;
-    if (this.state.busy) return ` ${this.theme.fg("dim", "Ctrl+C cancels this answer. Esc hides the window.")}`;
+    if (this.state.busy)
+      return ` ${this.theme.fg("dim", "Ctrl+C cancels this answer. Esc hides the window.")}`;
     if (maxScrollOffset > 0 && this.state.scrollOffset > 0) {
       return ` ${this.theme.fg("dim", `Scrolled up ${this.state.scrollOffset}/${maxScrollOffset}. Down/PageDown returns.`)}`;
     }
@@ -1152,7 +1199,9 @@ export default function englishSidecarExtension(pi: ExtensionAPI) {
     requestCoachWindowRender?.();
   };
 
-  const getCurrentStatusPhase = (): Exclude<PopupPhase, "ready"> | undefined => {
+  const getCurrentStatusPhase = ():
+    | Exclude<PopupPhase, "ready">
+    | undefined => {
     if (
       latestPopupState?.phase === "checking" ||
       latestPopupState?.phase === "error"
@@ -1209,7 +1258,8 @@ export default function englishSidecarExtension(pi: ExtensionAPI) {
 
   const showOrUpdatePopup = (state: PopupState, ctx: ExtensionContext) => {
     const isNewReview =
-      state.reviewId !== undefined && latestPopupState?.reviewId !== state.reviewId;
+      state.reviewId !== undefined &&
+      latestPopupState?.reviewId !== state.reviewId;
     if (isNewReview) resetCoachConversationForNewReview();
 
     latestPopupState = state;
@@ -1326,7 +1376,9 @@ export default function englishSidecarExtension(pi: ExtensionAPI) {
               onSubmit: (text) => submitCoachQuestion(text, ctx),
             },
             () => requestCoachRender(),
-            () => tui.terminal?.rows ?? MIN_COACH_WINDOW_ROWS + COACH_WINDOW_MARGIN_ROWS,
+            () =>
+              tui.terminal?.rows ??
+              MIN_COACH_WINDOW_ROWS + COACH_WINDOW_MARGIN_ROWS,
             () => latestPopupState,
           );
           return coachWindowComponent;
@@ -1403,7 +1455,10 @@ export default function englishSidecarExtension(pi: ExtensionAPI) {
 
     const requestId = ++coachRequestId;
     stopCoachProcess();
-    const prompt = buildCoachChatPrompt(coachWindowState.messages, latestPopupState);
+    const prompt = buildCoachChatPrompt(
+      coachWindowState.messages,
+      latestPopupState,
+    );
 
     void runConfiguredSidecar(
       prompt,
@@ -1479,7 +1534,8 @@ export default function englishSidecarExtension(pi: ExtensionAPI) {
       return;
     }
 
-    if (popupVisible && latestPopupState) showOrUpdatePopup(latestPopupState, ctx);
+    if (popupVisible && latestPopupState)
+      showOrUpdatePopup(latestPopupState, ctx);
     if (coachWindowComponent) requestCoachRender();
     setStatus(ctx);
     ctx.ui.notify("English sidecar enabled.", "info");
@@ -1494,7 +1550,12 @@ export default function englishSidecarExtension(pi: ExtensionAPI) {
 
     setStatus(ctx, "checking");
     showOrUpdatePopup(
-      { phase: "checking", userText: text, reviewId: requestId, truncatedInput: truncated },
+      {
+        phase: "checking",
+        userText: text,
+        reviewId: requestId,
+        truncatedInput: truncated,
+      },
       ctx,
     );
 
