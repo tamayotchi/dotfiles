@@ -1,3 +1,5 @@
 {
+  "tui.editor.cursorLineEnd": ["end", "ctrl+end"],
+  "tui.editor.deleteToLineEnd": "alt+k",
   "tui.input.newLine": ["shift+enter", "ctrl+j"]
 }

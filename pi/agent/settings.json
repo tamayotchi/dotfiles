@@ -4,7 +4,7 @@
   "defaultThinkingLevel": "high",
   "editorPaddingX": 0,
   "hideThinkingBlock": true,
-  "lastChangelogVersion": "0.84.2",
+  "lastChangelogVersion": "0.84.3",
   "packages": [
     "~/.pi",
     "npm:pi-web-access"
