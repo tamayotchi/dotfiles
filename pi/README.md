@@ -4,9 +4,6 @@ This directory mirrors the safe, versioned parts of `~/.pi`.
 
 ## Versioned here
 
-- `agent/settings.json` -> global Pi settings
-- `agent/keybindings.json` -> Pi keybindings
-- `agent/APPEND_SYSTEM.md` -> extra global instructions
 - `package.json` -> local Pi package manifest
 - `extensions/` -> custom extensions
 - `themes/` -> custom themes / UI colors
@@ -15,15 +12,9 @@ This directory mirrors the safe, versioned parts of `~/.pi`.
 
 ## Intentionally not versioned
 
-Machine-local runtime files and secrets are ignored, including:
+Machine-local settings, runtime files, and secrets are ignored, including:
 
-- `agent/auth.json`
-- `agent/mcp-cache.json`
-- `agent/models.json`
-- `agent/sessions/`
-- `agent/git/`
-- `agent/extensions/`
-- `agent/skills/`
+- `agent/` -> Pi-managed settings, keybindings, installed packages, sessions, and secrets
 - `exa-usage.json`
 - `web-search.json`
 

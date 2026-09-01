@@ -12,6 +12,7 @@ This repo intentionally does **not** include an install/bootstrap script anymore
 - `nvim/` -> Git submodule pointing to [`tamayotchi/nvim`](https://github.com/tamayotchi/nvim)
 - `claude/` -> Claude user settings
 - `herdr/` -> Herdr config
+- `proxmox/` -> Terraform configuration for existing Proxmox VMs
 
 ## Clone
 

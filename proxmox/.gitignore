@@ -1,0 +1,16 @@
+# Terraform working directory and local state
+.terraform/
+*.tfstate
+*.tfstate.*
+*.tfplan
+crash.log
+crash.*.log
+
+# Local overrides and values may contain secrets
+*.auto.tfvars
+*.auto.tfvars.json
+terraform.tfvars
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
