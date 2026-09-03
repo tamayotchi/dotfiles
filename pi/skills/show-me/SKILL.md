@@ -45,16 +45,13 @@ src/
 └── transport/      # sends API requests
 ```
 
-- Show component interaction, control flow, or data flow with Mermaid:
+- Show component interaction, control flow, or data flow with Mermaid. Keep diagrams narrow enough for terminal rendering: use `flowchart TD` for flowcharts and avoid horizontal `LR` or `RL` layouts. Keep labels short and split large diagrams when needed.
 
 ```mermaid
-sequenceDiagram
-    participant User
-    participant UI
-    participant Daemon
-    User->>UI: choose command
-    UI->>Daemon: send expanded prompt
-    Daemon-->>UI: stream result
+flowchart TD
+    A[User chooses command] --> B[UI expands prompt]
+    B --> C[Daemon runs request]
+    C --> D[UI streams result]
 ```
 
 - Use `diff` when the point is what changes and the surrounding shape already exists. Match the diff shape to the topic.
