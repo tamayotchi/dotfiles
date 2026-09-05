@@ -1,10 +1,10 @@
 {
-  "defaultModel": "gpt-5.6-sol",
-  "defaultProvider": "github-copilot",
+  "defaultModel": "gpt-6-astra",
+  "defaultProvider": "openai-codex",
   "defaultThinkingLevel": "high",
   "editorPaddingX": 0,
   "hideThinkingBlock": true,
-  "lastChangelogVersion": "0.84.3",
+  "lastChangelogVersion": "0.85.0",
   "packages": [
     "~/.pi",
     "npm:pi-web-access"
@@ -14,5 +14,11 @@
   },
   "steeringMode": "all",
   "theme": "dark",
-  "transport": "sse"
+  "tuiMode": "fullscreen",
+  "transport": "sse",
+  "enabledModels": [
+    "github-copilot/gpt-5.6-sol",
+    "openai-codex/gpt-5.6-sol",
+    "openai-codex/gpt-6-astra"
+  ]
 }
