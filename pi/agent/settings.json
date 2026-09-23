@@ -4,7 +4,7 @@
   "defaultThinkingLevel": "high",
   "editorPaddingX": 0,
   "hideThinkingBlock": true,
-  "lastChangelogVersion": "0.85.0",
+  "lastChangelogVersion": "0.85.1",
   "packages": [
     "~/.pi",
     "npm:pi-web-access"
@@ -19,6 +19,14 @@
   "enabledModels": [
     "github-copilot/gpt-5.6-sol",
     "openai-codex/gpt-5.6-sol",
-    "openai-codex/gpt-6-astra"
-  ]
+    "openai-codex/gpt-6-astra",
+    "openrouter/deepseek/deepseek-v4-pro"
+  ],
+  "showCacheMissNotices": true,
+  "defaultProjectTrust": "always",
+  "markdown": {
+    "mermaid": "streaming"
+  },
+  "doubleEscapeAction": "tree",
+  "treeFilterMode": "default"
 }

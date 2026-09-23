@@ -32,81 +32,82 @@ Author or modify ForgeCAD models, sketches, assemblies, and CLI workflows. Prefe
 ## Source Map
 
 Load groups top-to-bottom, stopping when you have what the task needs.
+Resolve the documentation paths below relative to this skill's directory.
 
 ### 1. Core API (always read first)
 
 Execution model, colors, coordinate system, primitives, booleans, patterns, imports, parameters, topology, edge queries.
 
-- `/home/tamayotchi/.agents/skills/forgecad/docs/API/core/concepts.md`
-- `/home/tamayotchi/.agents/skills/forgecad/docs/generated/core.md`
+- `docs/API/core/concepts.md`
+- `docs/generated/core.md`
 
 ### 2. Static Assembly and Positioning (for any multi-part model)
 
 Axis conventions, winding rules, and placement strategy. If parts should touch in the final model, read this group before writing placement code. Connectors + `matchTo()` are the default for mating interfaces; raw `translate()` and `rotate()` are for free offsets, not assembly contracts.
 
-- `/home/tamayotchi/.agents/skills/forgecad/docs/guides/coordinate-system.md`
-- `/home/tamayotchi/.agents/skills/forgecad/docs/guides/geometry-conventions.md`
-- `/home/tamayotchi/.agents/skills/forgecad/docs/guides/positioning.md`
+- `docs/guides/coordinate-system.md`
+- `docs/guides/geometry-conventions.md`
+- `docs/guides/positioning.md`
 
 ### 3. Sketch APIs
 
 2D construction, transforms, booleans, paths, on-face sketching, extrusion, anchors, text, regions.
 
-- `/home/tamayotchi/.agents/skills/forgecad/docs/generated/sketch.md`
+- `docs/generated/sketch.md`
 
 ### 4. Curves and Surfacing (for lofts, sweeps, splines)
 
 Smooth curves, Hermite splines, lofted and swept solids.
 
-- `/home/tamayotchi/.agents/skills/forgecad/docs/generated/curves.md`
+- `docs/generated/curves.md`
 
 ### 5. Assemblies and Mechanisms (for joints or kinematics)
 
 Assembly graph, joint types, couplings, validation, robot export.
 
-- `/home/tamayotchi/.agents/skills/forgecad/docs/generated/assembly.md`
+- `docs/generated/assembly.md`
 
 ### 6. Sheet Metal (for bent parts, K-factor, flat patterns)
 
 Bend operations, flat pattern unfolding, K-factor configuration.
 
-- `/home/tamayotchi/.agents/skills/forgecad/docs/generated/sheet-metal.md`
+- `docs/generated/sheet-metal.md`
 
 ### 7. Output and Export (for STL/3MF/STEP, BOM, dimensions)
 
 Mesh export, exact geometry export, bill of materials, dimension annotations.
 
-- `/home/tamayotchi/.agents/skills/forgecad/docs/generated/output.md`
+- `docs/generated/output.md`
 
 ### 8. Toolbox (fasteners and standard parts)
 
 Parametric bolts, nuts, washers, standard hardware, gears, pipes, and structural profiles.
 
-- `/home/tamayotchi/.agents/skills/forgecad/docs/generated/lib.md`
-- `/home/tamayotchi/.agents/skills/forgecad/docs/generated/wood.md`
+- `docs/generated/lib.md`
+- `docs/generated/wood.md`
 
 ### 9. Runtime Viewport APIs (for cut planes, jointsView, and animation playback)
 
 Viewer-only APIs such as cutPlane, explodeView, jointsView, and animation behavior.
 
-- `/home/tamayotchi/.agents/skills/forgecad/docs/generated/viewport.md`
+- `docs/generated/viewport.md`
 
 ### 10. Recipes and Debugging (for patterns and troubleshooting)
 
 Modeling patterns, debugging tactics, copyable snippets.
 
-- `/home/tamayotchi/.agents/skills/forgecad/docs/guides/modeling-recipes.md`
-- `/home/tamayotchi/.agents/skills/forgecad/docs/guides/joint-design.md`
+- `docs/guides/modeling-recipes.md`
+- `docs/guides/joint-design.md`
 
 ### 11. CLI (for validation/render/export tasks)
 
 Test-run, export pipelines, debug flags.
 
-- `/home/tamayotchi/.agents/skills/forgecad/docs/CLI.md`
-- `/home/tamayotchi/.agents/skills/forgecad/docs/guides/inspection-bundles.md`
+- `docs/CLI.md`
+- `docs/guides/inspection-bundles.md`
 
 ### SDF Modeling (smooth booleans, TPMS, deformations, fromFunction)
 
 Primitives, smooth booleans, TPMS lattices, twist/bend/displace, morph, custom functions, gotchas. SDF is inherently implicit and sampled, not B-rep/exact geometry; use caution for precision-critical parts and exact export workflows.
 
-- `/home/tamayotchi/.agents/skills/forgecad/docs/generated/sdf.md`
+- `docs/generated/sdf.md`
