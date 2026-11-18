@@ -12,7 +12,8 @@ This repo intentionally does **not** include an install/bootstrap script anymore
 - `tmux/` -> tmux config from `~/.config/tmux/tmux.conf`
 - `nvim/` -> Git submodule pointing to [`tamayotchi/nvim`](https://github.com/tamayotchi/nvim)
 - `claude/` -> Claude user settings
-- `herdr/` -> Herdr config
+- `herdr-tui/` -> Herdr terminal UI config (`~/.config/herdr/config.toml`)
+- `herdr-ui/` -> Herdr desktop config, personal layout and mods (`~/.config/herdr-app/`); see [restore notes](herdr-ui/README.md)
 - `proxmox/` -> Terraform configuration for existing Proxmox VMs
 
 ## Clone
@@ -41,6 +42,8 @@ Current expected links:
 ~/.config/nvim                -> ~/dotfiles/nvim
 ~/.pi/agent/bin/subagent      -> ~/dotfiles/pi/extensions/subagent/subagent.ts
 ```
+
+Herdr configs are saved copies, not live symlinks. Renaming `herdr/` to `herdr-tui/` does **not** rename the app's `~/.config/herdr/` directory. The existing TUI config is preserved as-is; the desktop snapshot excludes generated files and session state.
 
 Before changing a link, check what already exists:
 

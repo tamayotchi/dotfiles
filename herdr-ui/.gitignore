@@ -1,0 +1,22 @@
+# Only portable configuration belongs here, never the complete app home.
+/*
+!/.gitignore
+!/README.md
+!/keys.json
+!/settings.json
+!/layouts/
+!/mods/
+
+# App-generated editor support and runtime artifacts inside personal folders.
+**/*.d.ts
+**/jsconfig.json
+**/*.error
+**/node_modules/
+/layouts/.state/
+
+# Shipped layouts/mods are installed and updated by Herdr.
+/layouts/*
+!/layouts/tamayotchi.json
+!/layouts/tamayotchi.svg
+/mods/*
+!/mods/tama-*/
