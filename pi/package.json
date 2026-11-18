@@ -8,7 +8,8 @@
   "pi": {
     "extensions": [
       "./extensions/english-sidecar/index.ts",
-      "./extensions/draft-stash/index.ts"
+      "./extensions/draft-stash/index.ts",
+      "./extensions/subagent/index.ts"
     ],
     "skills": ["./skills"],
     "prompts": ["./prompts"],

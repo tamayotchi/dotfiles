@@ -2,3 +2,6 @@
 	path = nvim
 	url = https://github.com/tamayotchi/nvim.git
 	branch = master
+[submodule "pi/extensions/subagent"]
+	path = pi/extensions/subagent
+	url = https://github.com/badlogic/pi-subagent.git

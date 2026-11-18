@@ -7,6 +7,7 @@ This repo intentionally does **not** include an install/bootstrap script anymore
 ## Layout
 
 - `pi/` -> current `~/.pi` config/package content, excluding runtime files and secrets
+  - `pi/extensions/subagent` -> Git submodule pointing to [`badlogic/pi-subagent`](https://github.com/badlogic/pi-subagent)
 - `hm/` -> small Home Assistant helper config/script from `~/hm`
 - `tmux/` -> tmux config from `~/.config/tmux/tmux.conf`
 - `nvim/` -> Git submodule pointing to [`tamayotchi/nvim`](https://github.com/tamayotchi/nvim)
@@ -38,6 +39,7 @@ Current expected links:
 ~/hm                          -> ~/dotfiles/hm
 ~/.config/tmux/tmux.conf      -> ~/dotfiles/tmux/tmux.conf
 ~/.config/nvim                -> ~/dotfiles/nvim
+~/.pi/agent/bin/subagent      -> ~/dotfiles/pi/extensions/subagent/subagent.ts
 ```
 
 Before changing a link, check what already exists:
