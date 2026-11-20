@@ -1,0 +1,693 @@
+{
+  "title": "Avisos de Envío",
+  "subtitle": "Recorrido de funcionalidad · equipo de Pedidos",
+  "lang": "es",
+  "icon": "bell",
+  "sections": [
+    {
+      "title": "Notificaciones",
+      "color": "violet",
+      "lessons": [
+        {
+          "id": "avisos-push",
+          "title": "Avisos push de envío",
+          "summary": "Cómo dejamos de consultar la API cada 30 segundos y pasamos a avisar al cliente en cuanto su pedido sale.",
+          "minutes": 6,
+          "level": "beginner",
+          "illustrative": true,
+          "metrics": {
+            "aviso": {
+              "label": "Tiempo hasta el aviso",
+              "icon": "bell",
+              "format": "s",
+              "good": "<=5",
+              "warn": "<=20"
+            },
+            "cpu": {
+              "label": "CPU de la API",
+              "icon": "cpu",
+              "format": "%",
+              "good": "<=50",
+              "warn": "<=75"
+            },
+            "bateria": {
+              "label": "Batería",
+              "icon": "smartphone",
+              "format": "text"
+            }
+          },
+          "legend": [
+            "req",
+            "res",
+            "ping",
+            "event",
+            "msg",
+            "fail"
+          ],
+          "goals": [
+            {
+              "text": "Por qué el polling no escala",
+              "step": 1
+            },
+            {
+              "text": "Publicar eventos en vez de preguntar",
+              "step": 2
+            },
+            {
+              "text": "Enviar push con APNs y FCM",
+              "step": 3
+            },
+            {
+              "text": "Respetar las preferencias del usuario",
+              "step": 4
+            },
+            {
+              "text": "Qué pasa si un push se pierde",
+              "step": 5
+            }
+          ],
+          "cast": {
+            "phone": {
+              "type": "device",
+              "form": "phone",
+              "x": 12,
+              "y": -12,
+              "label": "app móvil"
+            },
+            "api": {
+              "type": "service",
+              "x": -4,
+              "y": -12,
+              "color": "orange",
+              "icon": "server",
+              "label": [
+                "API"
+              ]
+            },
+            "orders": {
+              "type": "service",
+              "x": -16,
+              "y": -3,
+              "color": "yellow",
+              "icon": "packageCheck",
+              "label": [
+                "Pedidos"
+              ]
+            },
+            "bus": {
+              "type": "queue",
+              "x": -7,
+              "y": 2,
+              "dir": [
+                0,
+                1
+              ],
+              "n": 3,
+              "color": "purple",
+              "label": "eventos",
+              "icon": "radio"
+            },
+            "notifier": {
+              "type": "service",
+              "x": 2,
+              "y": 6,
+              "color": "purple",
+              "icon": "bell",
+              "label": [
+                "Avisos"
+              ]
+            },
+            "prefs": {
+              "type": "db",
+              "x": -8,
+              "y": 18,
+              "label": "preferencias",
+              "color": "blue",
+              "icon": "slidersHorizontal"
+            },
+            "providers": {
+              "type": "zone",
+              "x0": 6.5,
+              "x1": 17.5,
+              "y0": 3,
+              "y1": 16.5,
+              "label": "proveedores externos",
+              "tone": "gray",
+              "icon": "cloud"
+            },
+            "apns": {
+              "type": "service",
+              "x": 9,
+              "y": 13,
+              "s": 3,
+              "h": 36,
+              "color": "gray",
+              "icon": "smartphone",
+              "label": [
+                "APNs"
+              ]
+            },
+            "fcm": {
+              "type": "service",
+              "x": 15,
+              "y": 7,
+              "s": 3,
+              "h": 36,
+              "color": "green",
+              "icon": "smartphone",
+              "label": [
+                "FCM"
+              ]
+            }
+          },
+          "wires": {
+            "poll": {
+              "from": "phone",
+              "to": "api",
+              "heads": "both",
+              "label": "GET /pedidos · cada 30 s"
+            },
+            "pub": {
+              "from": "orders",
+              "to": "bus",
+              "label": "pedido.enviado"
+            },
+            "sub": {
+              "from": "bus",
+              "to": "notifier"
+            },
+            "toApns": {
+              "from": "notifier",
+              "to": "apns"
+            },
+            "toFcm": {
+              "from": "notifier",
+              "to": "fcm"
+            },
+            "apnsPhone": {
+              "from": "apns",
+              "to": "phone",
+              "style": "dashed"
+            },
+            "fcmPhone": {
+              "from": "fcm",
+              "to": "phone",
+              "style": "dashed",
+              "label": "push"
+            },
+            "pref": {
+              "from": "notifier",
+              "to": "prefs",
+              "heads": "both",
+              "label": "¿quiere avisos?"
+            },
+            "sync": {
+              "from": "phone",
+              "to": "api",
+              "heads": "both",
+              "style": "dashed",
+              "label": "sync al abrir"
+            }
+          },
+          "steps": [
+            {
+              "short": "Polling",
+              "chapter": "problem",
+              "title": "La app pregunta cada 30 segundos",
+              "body": [
+                "Hoy la app consulta <code>GET /pedidos</code> cada 30 segundos para saber si algo cambió. Casi siempre la respuesta es “nada nuevo”.",
+                "Con 200.000 apps abiertas son <b>~6.700 peticiones por segundo</b> que no aportan nada, y el cliente igual se entera tarde: de media 15 s después."
+              ],
+              "callout": {
+                "kind": "warn",
+                "text": "El polling cuesta lo mismo haya o no novedades: paga la API, paga la batería del teléfono."
+              },
+              "metrics": {
+                "aviso": 15,
+                "cpu": 72,
+                "bateria": {
+                  "value": "alta",
+                  "level": "bad"
+                }
+              },
+              "scene": {
+                "entities": {
+                  "phone": {
+                    "tags": [
+                      {
+                        "text": "¿hay novedades?",
+                        "icon": "refresh"
+                      }
+                    ]
+                  },
+                  "api": {
+                    "cpu": 0.72,
+                    "heat": 0.4
+                  }
+                },
+                "links": {
+                  "poll": true
+                },
+                "flows": [
+                  {
+                    "route": [
+                      "poll"
+                    ],
+                    "kind": "ping",
+                    "rate": 2.2,
+                    "bounce": true
+                  }
+                ]
+              }
+            },
+            {
+              "short": "Eventos",
+              "chapter": "solution",
+              "title": "El servicio de Pedidos publica un evento",
+              "body": [
+                "En vez de que la app pregunte, quien sabe que el pedido salió lo <b>dice</b>: Pedidos publica <code>pedido.enviado</code> en una cola de eventos.",
+                "Un nuevo servicio, <span class=\"term\">Avisos</span>, escucha esos eventos. Pedidos no necesita saber nada de notificaciones."
+              ],
+              "callout": {
+                "kind": "insight",
+                "text": "Publicar eventos desacopla equipos: mañana otro servicio puede escuchar el mismo evento sin tocar Pedidos."
+              },
+              "changes": [
+                "+ Evento pedido.enviado",
+                "+ Servicio de Avisos suscrito",
+                "~ La app sigue haciendo polling (por ahora)"
+              ],
+              "metrics": {
+                "aviso": 15,
+                "cpu": 72,
+                "bateria": {
+                  "value": "alta",
+                  "level": "bad"
+                }
+              },
+              "scene": {
+                "entities": {
+                  "phone": true,
+                  "api": {
+                    "cpu": 0.72,
+                    "dim": 1
+                  },
+                  "orders": true,
+                  "bus": true,
+                  "notifier": true
+                },
+                "links": {
+                  "poll": {
+                    "style": "off"
+                  },
+                  "pub": true,
+                  "sub": true
+                },
+                "flows": [
+                  {
+                    "route": [
+                      "pub",
+                      "sub"
+                    ],
+                    "kind": "event",
+                    "rate": 1
+                  },
+                  {
+                    "route": [
+                      "poll"
+                    ],
+                    "kind": "ping",
+                    "rate": 0.8,
+                    "bounce": true
+                  }
+                ]
+              }
+            },
+            {
+              "short": "Push",
+              "chapter": "technique",
+              "title": "Avisos envía el push",
+              "body": [
+                "Avisos busca los dispositivos del cliente y envía el mensaje a la vez por <b>APNs</b> (iPhone) y <b>FCM</b> (Android). Ellos se encargan de despertar al teléfono.",
+                "Ya no hace falta el polling: la app lo apaga y el aviso llega en ~2 s."
+              ],
+              "callout": {
+                "kind": "tip",
+                "text": "Guarda los tokens de dispositivo por usuario y bórralos cuando APNs/FCM respondan que ya no son válidos."
+              },
+              "changes": [
+                "+ Envío por APNs y FCM",
+                "− Polling cada 30 s",
+                "~ CPU de la API 72% → 18%"
+              ],
+              "metrics": {
+                "aviso": 2,
+                "cpu": 18,
+                "bateria": {
+                  "value": "normal",
+                  "level": "good"
+                }
+              },
+              "scene": {
+                "entities": {
+                  "phone": {
+                    "tags": [
+                      {
+                        "text": "📦 Tu pedido va en camino",
+                        "tone": "green"
+                      }
+                    ]
+                  },
+                  "api": {
+                    "cpu": 0.18
+                  },
+                  "orders": true,
+                  "bus": true,
+                  "notifier": true,
+                  "providers": true,
+                  "apns": true,
+                  "fcm": true
+                },
+                "links": {
+                  "pub": true,
+                  "sub": true,
+                  "toApns": true,
+                  "toFcm": true,
+                  "apnsPhone": true,
+                  "fcmPhone": true
+                },
+                "flows": [
+                  {
+                    "route": [
+                      "pub",
+                      "sub"
+                    ],
+                    "kind": "event",
+                    "rate": 0.8
+                  },
+                  {
+                    "routes": [
+                      {
+                        "route": [
+                          "toApns",
+                          "apnsPhone"
+                        ]
+                      },
+                      {
+                        "route": [
+                          "toFcm",
+                          "fcmPhone"
+                        ]
+                      }
+                    ],
+                    "fanout": true,
+                    "kind": "msg",
+                    "rate": 0.8
+                  }
+                ],
+                "card": {
+                  "title": "El mensaje",
+                  "icon": "message",
+                  "lines": [
+                    "título:  Tu pedido va en camino",
+                    "cuerpo:  Llega mañana entre 9 y 13 h",
+                    "deeplink: app://pedidos/48213",
+                    "# sin datos sensibles en el push"
+                  ]
+                }
+              }
+            },
+            {
+              "short": "Preferencias",
+              "chapter": "technique",
+              "title": "Solo si el cliente lo quiere",
+              "body": [
+                "Antes de enviar, Avisos consulta las <span class=\"term\">preferencias</span> del cliente: canales activos, horario silencioso e idioma.",
+                "Si son las 2 de la madrugada, el aviso se guarda y sale a las 8."
+              ],
+              "callout": {
+                "kind": "tip",
+                "text": "Las preferencias se cachean unos minutos en Avisos: no hace falta una consulta por mensaje."
+              },
+              "changes": [
+                "+ Tabla de preferencias",
+                "+ Horario silencioso"
+              ],
+              "metrics": {
+                "aviso": 2,
+                "cpu": 18,
+                "bateria": {
+                  "value": "normal",
+                  "level": "good"
+                }
+              },
+              "scene": {
+                "entities": {
+                  "phone": true,
+                  "api": {
+                    "cpu": 0.18
+                  },
+                  "orders": true,
+                  "bus": true,
+                  "notifier": true,
+                  "prefs": {
+                    "tags": [
+                      {
+                        "text": "silencio 23–8 h",
+                        "tone": "violet",
+                        "icon": "moon"
+                      }
+                    ]
+                  },
+                  "providers": true,
+                  "apns": true,
+                  "fcm": true
+                },
+                "links": {
+                  "pub": true,
+                  "sub": true,
+                  "pref": true,
+                  "toApns": true,
+                  "toFcm": true,
+                  "apnsPhone": true,
+                  "fcmPhone": true
+                },
+                "flows": [
+                  {
+                    "route": [
+                      "pub",
+                      "sub"
+                    ],
+                    "kind": "event",
+                    "rate": 0.8
+                  },
+                  {
+                    "route": [
+                      "pref"
+                    ],
+                    "rate": 0.8,
+                    "bounce": true
+                  },
+                  {
+                    "routes": [
+                      {
+                        "route": [
+                          "toApns",
+                          "apnsPhone"
+                        ]
+                      },
+                      {
+                        "route": [
+                          "toFcm",
+                          "fcmPhone"
+                        ]
+                      }
+                    ],
+                    "fanout": true,
+                    "kind": "msg",
+                    "rate": 0.6
+                  }
+                ]
+              }
+            },
+            {
+              "short": "Sin garantía",
+              "chapter": "tradeoff",
+              "title": "Un push puede no llegar",
+              "body": [
+                "APNs y FCM entregan “lo mejor posible”: un teléfono apagado o sin batería puede perder el aviso.",
+                "Por eso el push es solo un atajo. Al abrir, la app hace <b>una</b> sincronización con la API y muestra el estado real del pedido."
+              ],
+              "callout": {
+                "kind": "decision",
+                "text": "Elegimos push + sync al abrir. Descartado: mantener el polling como respaldo (vuelve todo el coste del paso 1)."
+              },
+              "changes": [
+                "+ Sync al abrir la app",
+                "~ Push = atajo, la API = fuente de verdad"
+              ],
+              "metrics": {
+                "aviso": {
+                  "value": "2 s · o al abrir",
+                  "level": "warn"
+                },
+                "cpu": 20,
+                "bateria": {
+                  "value": "normal",
+                  "level": "good"
+                }
+              },
+              "scene": {
+                "entities": {
+                  "phone": {
+                    "tags": [
+                      {
+                        "text": "teléfono apagado",
+                        "tone": "amber",
+                        "icon": "power"
+                      }
+                    ]
+                  },
+                  "api": {
+                    "cpu": 0.2
+                  },
+                  "orders": true,
+                  "bus": true,
+                  "notifier": true,
+                  "prefs": true,
+                  "providers": true,
+                  "apns": true,
+                  "fcm": true
+                },
+                "links": {
+                  "pub": true,
+                  "sub": true,
+                  "pref": true,
+                  "toApns": true,
+                  "toFcm": true,
+                  "apnsPhone": {
+                    "fail": 0.5
+                  },
+                  "fcmPhone": {
+                    "fail": 0.5
+                  },
+                  "sync": true
+                },
+                "flows": [
+                  {
+                    "route": [
+                      "pub",
+                      "sub"
+                    ],
+                    "kind": "event",
+                    "rate": 0.8
+                  },
+                  {
+                    "routes": [
+                      {
+                        "route": [
+                          "toApns",
+                          "apnsPhone"
+                        ]
+                      },
+                      {
+                        "route": [
+                          "toFcm",
+                          "fcmPhone"
+                        ]
+                      }
+                    ],
+                    "fanout": true,
+                    "kind": "msg",
+                    "rate": 0.8
+                  },
+                  {
+                    "route": [
+                      "sync"
+                    ],
+                    "rate": 0.4,
+                    "bounce": true
+                  }
+                ]
+              }
+            },
+            {
+              "short": "Resumen",
+              "chapter": "recap",
+              "title": "Resumen",
+              "body": [
+                "<ul class=\"takeaways\"><li>Quien conoce el cambio <b>publica un evento</b>; nadie pregunta en bucle.</li><li>Un servicio de <b>Avisos</b> concentra canales, tokens y preferencias.</li><li>El push es un <b>atajo</b>; la API sigue siendo la fuente de verdad.</li></ul>"
+              ],
+              "callout": {
+                "kind": "next",
+                "text": "Siguiente: <b>avisos por email</b> reutilizando el mismo evento."
+              },
+              "metrics": {
+                "aviso": 2,
+                "cpu": 18,
+                "bateria": {
+                  "value": "normal",
+                  "level": "good"
+                }
+              },
+              "scene": {
+                "entities": {
+                  "phone": true,
+                  "api": {
+                    "cpu": 0.18
+                  },
+                  "orders": true,
+                  "bus": true,
+                  "notifier": true,
+                  "prefs": true,
+                  "providers": true,
+                  "apns": true,
+                  "fcm": true
+                },
+                "links": {
+                  "pub": true,
+                  "sub": true,
+                  "pref": true,
+                  "toApns": true,
+                  "toFcm": true,
+                  "apnsPhone": true,
+                  "fcmPhone": true,
+                  "sync": true
+                },
+                "flows": [
+                  {
+                    "route": [
+                      "pub",
+                      "sub"
+                    ],
+                    "kind": "event",
+                    "rate": 0.8
+                  },
+                  {
+                    "routes": [
+                      {
+                        "route": [
+                          "toApns",
+                          "apnsPhone"
+                        ]
+                      },
+                      {
+                        "route": [
+                          "toFcm",
+                          "fcmPhone"
+                        ]
+                      }
+                    ],
+                    "fanout": true,
+                    "kind": "msg",
+                    "rate": 0.6
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

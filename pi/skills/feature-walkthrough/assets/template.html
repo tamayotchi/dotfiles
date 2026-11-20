@@ -1,0 +1,1080 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>/*__TITLE__*/</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+<style>
+:root {
+  --font: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  --paper: #f4ebe0; --sheet: #f9f2e8; --card: #fbf6ef; --card-2: #f3e9dc;
+  --line: #ddd3c5; --line-soft: #e8dfd2; --line-strong: #c6bbac;
+  --ink: #1d1b18; --ink-2: #34302b; --muted: #6f6961; --muted-2: #8b847a;
+  --wire: #1d1b18; --wire-off: #b0a698; --grid: #a8916f; --stage: #f7efe4;
+  --good: #2f8a43; --warn: #b7791f; --bad: #c0392b; --none: #6f6961;
+  --good-bg: #dcefd2; --warn-bg: #fbe5bd; --bad-bg: #f8d5cf;
+  --green: #cfe3b2; --green-2: #b2d491; --violet: #e7ddf5; --blue: #d9e7f7; --sand: #efe1c9; --amber: #fbe5bd; --red: #f8d5cf; --teal: #d1ece8;
+  --mark: #cfe3b2;
+  --radius: 14px;
+}
+html[data-theme="dark"] {
+  --paper: #191714; --sheet: #211e1a; --card: #26231f; --card-2: #2c2823;
+  --line: #3a352f; --line-soft: #312d28; --line-strong: #4d463c;
+  --ink: #efe6d6; --ink-2: #ddd3c2; --muted: #b0a698; --muted-2: #8f877c;
+  --wire: #e9dfcd; --wire-off: #6f675c; --grid: #8a7a60; --stage: #1d1b18;
+  --good: #8fd27f; --warn: #f0b955; --bad: #f08a7e; --none: #b0a698;
+  --good-bg: #24371f; --warn-bg: #3b2f17; --bad-bg: #3f211d;
+  --green: #2f4426; --green-2: #3f5a33; --violet: #33294a; --blue: #1f3247; --sand: #3a3123; --amber: #3d3119; --red: #45231f; --teal: #1e3a36;
+  --mark: #3f5a33;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; height: 100%; }
+body { background: var(--paper); color: var(--ink); font: 13px/1.55 var(--font); -webkit-font-smoothing: antialiased; overflow: hidden; }
+button { font: inherit; color: inherit; }
+code { font-family: var(--font); background: var(--card-2); border: 1px solid var(--line); border-radius: 5px; padding: 0 4px; font-size: .95em; }
+b, strong { color: var(--ink); font-weight: 700; }
+.i { flex: none; vertical-align: -3px; }
+
+/* ---------- shell ---------- */
+.app { display: grid; grid-template-rows: 52px 1fr; height: 100vh; }
+.topbar { display: flex; align-items: center; gap: 14px; padding: 0 18px; border-bottom: 1px solid var(--line); background: var(--paper); min-width: 0; }
+.brand { display: flex; align-items: center; gap: 10px; font-weight: 800; font-size: 16px; text-decoration: none; color: var(--ink); white-space: nowrap; }
+.brand-mark { width: 30px; height: 30px; border: 1.5px solid var(--ink); border-radius: 8px; display: grid; place-items: center; background: var(--green); box-shadow: 0 2px 0 var(--ink); }
+.brand em { font-style: normal; background: linear-gradient(transparent 55%, var(--mark) 55%); padding: 0 2px; }
+.topbar .sub { color: var(--muted); font-size: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.topbar .spacer { flex: 1; }
+.tbtn { display: inline-flex; align-items: center; gap: 6px; height: 32px; padding: 0 10px; border: 1.5px solid var(--ink); border-radius: 8px; background: var(--card); box-shadow: 0 2px 0 var(--ink); cursor: pointer; font-size: 12px; font-weight: 600; white-space: nowrap; }
+.tbtn:active { transform: translateY(2px); box-shadow: none; }
+.tbtn.on { background: var(--green); }
+.tbtn.icon { width: 34px; padding: 0; justify-content: center; }
+
+.body { display: grid; grid-template-columns: 260px minmax(0, 1fr) 340px; gap: 14px; padding: 12px 14px 14px; min-height: 0; }
+html.no-sidebar .body, html.presenter .body { grid-template-columns: minmax(0, 1fr) 360px; }
+html.no-sidebar .sidebar, html.presenter .sidebar { display: none; }
+html.presenter .goals-card { display: none; }
+html.presenter .topbar { display: none; }
+html.presenter .app { grid-template-rows: 1fr; }
+html.presenter .step-body, html.presenter .callout .c-text, html.presenter .changes li { font-size: 14px; }
+html.presenter .step-card h2 { font-size: 21px; }
+
+/* ---------- sidebar ---------- */
+.sidebar { display: flex; flex-direction: column; gap: 12px; min-height: 0; }
+.course { flex: 1; overflow: auto; padding: 6px 4px; }
+.course-head { display: flex; justify-content: space-between; align-items: baseline; padding: 4px 8px 10px; font-weight: 700; font-size: 14px; }
+.course-head span { color: var(--muted); font-size: 11px; font-weight: 500; }
+.sec { margin-bottom: 4px; }
+.sec-title { display: flex; align-items: center; gap: 8px; padding: 6px 8px; font-weight: 600; font-size: 13px; border-radius: 8px; cursor: pointer; user-select: none; }
+.sec-title:hover { background: var(--card-2); }
+.sec-title .count { margin-left: auto; color: var(--muted); font-size: 11px; font-weight: 500; }
+.folder { width: 18px; height: 14px; border-radius: 3px; border: 1.3px solid var(--ink); flex: none; }
+.sec-lessons { list-style: none; margin: 2px 0 8px 17px; padding: 0 0 0 12px; border-left: 1.5px solid var(--line-strong); }
+.sec.closed .sec-lessons { display: none; }
+.sec-lessons a { display: flex; align-items: center; gap: 8px; padding: 5px 8px; border-radius: 8px; color: var(--ink-2); text-decoration: none; font-size: 12.5px; border: 1.5px solid transparent; }
+.sec-lessons a:hover { background: var(--card-2); }
+.sec-lessons a.active { background: var(--green); border-color: var(--ink); box-shadow: 0 2px 0 var(--ink); font-weight: 600; color: var(--ink); }
+.sec-lessons a .done { margin-left: auto; color: var(--good); }
+.progress { border: 1px solid var(--line); border-radius: var(--radius); background: var(--sheet); padding: 12px 14px; display: flex; justify-content: space-between; font-weight: 700; font-size: 12px; letter-spacing: .04em; text-transform: uppercase; }
+
+/* ---------- main column ---------- */
+.main { display: flex; flex-direction: column; gap: 12px; min-height: 0; min-width: 0; background: var(--sheet); border: 1px solid var(--line); border-radius: var(--radius); padding: 18px 18px 14px; }
+.lesson-head { display: grid; grid-template-columns: 1fr auto; gap: 4px 16px; align-items: start; }
+.crumb { grid-column: 1 / -1; color: var(--ink-2); font-size: 12px; }
+.crumb .sep { color: var(--muted-2); margin: 0 6px; }
+.lesson-head h1 { margin: 0; font-size: 27px; line-height: 1.15; letter-spacing: -.01em; }
+.badges { display: flex; gap: 8px; align-self: center; flex-wrap: wrap; justify-content: flex-end; }
+.badge { display: inline-flex; align-items: center; gap: 6px; padding: 3px 10px; border: 1.5px solid var(--ink); border-radius: 999px; box-shadow: 0 2px 0 var(--ink); font-size: 11.5px; font-weight: 600; white-space: nowrap; }
+.badge.t-amber { background: var(--amber); } .badge.t-green { background: var(--green); } .badge.t-violet { background: var(--violet); } .badge.t-red { background: var(--red); } .badge.t-sand { background: var(--sand); }
+.summary { grid-column: 1 / -1; color: var(--muted); margin: 2px 0 0; }
+
+.stage-card { flex: 1; min-height: 0; display: flex; flex-direction: column; border: 1px solid var(--line); border-radius: 12px; background: var(--stage); overflow: hidden; position: relative; }
+.stage-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; padding: 12px 12px 0; position: relative; z-index: 3; }
+.metrics { display: flex; gap: 8px; flex-wrap: wrap; }
+.metric { min-width: 108px; padding: 6px 12px 6px 11px; border: 1px solid var(--line); border-left: 3px solid var(--none); border-radius: 8px; background: var(--card); transition: border-color .4s; }
+.metric .m-label { display: flex; align-items: center; gap: 5px; font-size: 9.5px; letter-spacing: .05em; text-transform: uppercase; color: var(--muted); font-weight: 600; white-space: nowrap; }
+.metric .m-val { font-size: 15px; font-weight: 800; color: var(--none); transition: color .4s; white-space: nowrap; }
+.metric .m-delta { font-size: 10px; margin-left: 5px; color: var(--muted-2); font-weight: 600; }
+.metric.lvl-good { border-left-color: var(--good); } .metric.lvl-good .m-val { color: var(--good); }
+.metric.lvl-warn { border-left-color: var(--warn); } .metric.lvl-warn .m-val { color: var(--warn); }
+.metric.lvl-bad { border-left-color: var(--bad); } .metric.lvl-bad .m-val { color: var(--bad); }
+.metric.lvl-none .m-val { color: var(--ink); }
+.metric.lvl-empty .m-val { color: var(--muted-2); }
+.controls { display: flex; gap: 8px; flex: none; }
+
+.stage { flex: 1; min-height: 0; position: relative; }
+.stage > svg { position: absolute; inset: 0; width: 100%; height: 100%; display: block; touch-action: none; }
+.stage.zoomed { cursor: grab; } .stage.dragging { cursor: grabbing; }
+.stage svg text { font-family: var(--font); }
+.legend { display: flex; flex-wrap: wrap; gap: 6px 18px; padding: 6px 16px 10px; color: var(--muted); font-size: 11px; position: relative; z-index: 2; }
+.legend span { display: inline-flex; align-items: center; gap: 6px; }
+.lg { width: 10px; height: 10px; border-radius: 50%; border: 1.3px solid #1d1b18; display: inline-block; }
+.lg.req { background: #f3b47f; } .lg.res { background: #9fd28f; } .lg.retry, .lg.slow { background: #efb041; }
+.lg.ping { background: #f4fbef; border: 2px solid #2f8a43; } .lg.event { background: #b79ce6; }
+.lg.write { background: #5d5466; border-radius: 2px; } .lg.msg { background: #efb041; border-radius: 2px; } .lg.heavy { background: #e8834d; border-radius: 3px; width: 12px; height: 12px; }
+.lg.fail { background: #e5534b; border-color: #8f2a22; position: relative; }
+.lg.fail::after { content: "×"; position: absolute; inset: -4px 0 0 0; color: #fff; font-size: 10px; font-weight: 800; text-align: center; }
+
+/* HUD card */
+.hud { position: absolute; z-index: 4; min-width: 240px; max-width: 440px; background: var(--card); border: 1.5px solid var(--ink); border-radius: 10px; box-shadow: 0 3px 0 var(--ink); padding: 10px 14px 12px; transition: opacity .35s, transform .35s; pointer-events: none; color: var(--ink); }
+.hud.hidden { opacity: 0; transform: translateY(8px); }
+.hud.measure { visibility: hidden; left: -9999px; top: 0; transition: none; }
+.hud-title { display: flex; align-items: center; gap: 7px; font-size: 10.5px; letter-spacing: .06em; text-transform: uppercase; font-weight: 700; padding-bottom: 7px; margin-bottom: 8px; border-bottom: 1px solid var(--line); }
+.hud-lines { font-size: 11.5px; line-height: 1.65; white-space: pre-wrap; overflow-wrap: anywhere; }
+.hud-lines .l-warn { color: var(--bad); } .hud-lines .l-eq { font-weight: 800; } .hud-lines .l-dim { color: var(--muted); } .hud-lines .l-ok { color: var(--good); }
+.hud-bars { display: grid; grid-template-columns: auto 1fr; gap: 6px 12px; align-items: center; font-size: 11.5px; }
+.hud-bars .track { position: relative; height: 13px; background: var(--line-soft); border-radius: 3px; min-width: 170px; }
+.hud-bars .seg { position: absolute; top: 0; bottom: 0; border-radius: 3px; border: 1.2px solid var(--ink); }
+.hud-bars .note { position: absolute; top: -2px; font-size: 10.5px; font-weight: 700; white-space: nowrap; padding-left: 5px; }
+.seg.t-red { background: #e5534b; } .seg.t-green { background: #9fd28f; } .seg.t-amber { background: #efb041; } .seg.t-blue { background: #a9c5e8; } .seg.t-violet { background: #cbbae6; } .seg.t-gray { background: #c4bcb1; }
+.hud-table { border-collapse: collapse; font-size: 11px; }
+.hud-table td, .hud-table th { padding: 2px 10px 2px 0; text-align: left; white-space: nowrap; }
+.hud-table th { color: var(--muted); font-weight: 600; font-size: 10px; text-transform: uppercase; letter-spacing: .04em; }
+
+/* timeline */
+.timeline { border: 1px solid var(--line); border-radius: 12px; background: var(--card); padding: 10px 14px 12px; }
+.tl-head { display: flex; justify-content: space-between; font-size: 11.5px; font-weight: 700; letter-spacing: .05em; text-transform: uppercase; margin-bottom: 8px; }
+.tl-head span:last-child { color: var(--muted); text-transform: none; letter-spacing: 0; font-weight: 500; }
+.tl { display: flex; position: relative; }
+.tl-step { flex: 1; min-width: 0; display: flex; flex-direction: column; align-items: center; gap: 4px; cursor: pointer; position: relative; background: none; border: 0; padding: 0; }
+.tl-step::before { content: ""; position: absolute; top: 12px; left: -50%; right: 50%; height: 2px; background: var(--line-strong); z-index: 0; }
+.tl-step:first-child::before { display: none; }
+.tl-step.done::before, .tl-step.cur::before { background: var(--ink); height: 3px; top: 11px; }
+.tl-dot { width: 25px; height: 25px; border-radius: 50%; border: 1.5px solid var(--muted-2); background: var(--card); display: grid; place-items: center; font-size: 10.5px; font-weight: 700; color: var(--muted); position: relative; z-index: 1; transition: all .25s; }
+.tl-step.done .tl-dot { border-color: var(--ink); color: var(--ink); background: var(--card-2); }
+.tl-step.cur .tl-dot { border-color: var(--ink); background: var(--green-2); color: var(--ink); box-shadow: 0 0 0 4px var(--green); transform: scale(1.06); }
+.tl-label { font-size: 10.5px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; padding: 0 2px; }
+.tl-step.cur .tl-label { color: var(--ink); font-weight: 700; }
+.tl-step:hover .tl-dot { border-color: var(--ink); }
+
+/* ---------- right column ---------- */
+.side { display: flex; flex-direction: column; gap: 12px; min-height: 0; }
+.step-card { flex: 1; min-height: 0; display: flex; flex-direction: column; background: var(--sheet); border: 1px solid var(--line); border-radius: var(--radius); padding: 18px 16px 12px; }
+.step-scroll { flex: 1; min-height: 0; overflow: auto; padding-right: 4px; }
+.step-meta { display: flex; justify-content: space-between; align-items: center; font-weight: 700; font-size: 12px; letter-spacing: .06em; margin-bottom: 12px; }
+.chip { padding: 2px 10px; border: 1.5px solid var(--ink); border-radius: 999px; box-shadow: 0 2px 0 var(--ink); font-size: 10px; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; color: #1d1b18; }
+.chip.t-sand { background: #efe1c9; } .chip.t-red { background: #f8d5cf; } .chip.t-green { background: #cfe3b2; } .chip.t-blue { background: #d6e5f6; } .chip.t-amber { background: #fbe5bd; } .chip.t-violet { background: #e7ddf5; } .chip.t-ink { background: #1d1b18; color: #f4ebe0; } .chip.t-teal { background: #d1ece8; }
+.step-card h2 { margin: 0 0 10px; font-size: 18px; line-height: 1.3; }
+.step-body p { margin: 0 0 12px; color: var(--ink-2); }
+.step-body .term { font-weight: 700; color: var(--ink); background: linear-gradient(transparent 62%, var(--mark) 62%); padding: 0 1px; }
+.step-body ul { margin: 0 0 12px; padding-left: 18px; color: var(--ink-2); }
+.step-body ul.takeaways { list-style: none; padding: 0; }
+.step-body ul.takeaways li { position: relative; padding: 0 0 8px 22px; }
+.step-body ul.takeaways li::before { content: "✓"; position: absolute; left: 0; top: 0; width: 15px; height: 15px; border: 1.3px solid var(--ink); border-radius: 4px; background: var(--green); font-size: 10px; line-height: 14px; text-align: center; font-weight: 800; color: var(--ink); }
+.step-body table { border-collapse: collapse; width: 100%; font-size: 11.5px; margin: 0 0 12px; }
+.step-body th, .step-body td { border-bottom: 1px solid var(--line); padding: 4px 6px; text-align: left; vertical-align: top; }
+.step-body th { font-size: 10px; text-transform: uppercase; letter-spacing: .04em; color: var(--muted); }
+.callout { display: grid; grid-template-columns: 28px 1fr; gap: 10px; border-radius: 10px; padding: 12px; margin: 4px 0 14px; border: 1px solid; }
+.callout .c-ico { width: 28px; height: 28px; border-radius: 7px; border: 1.3px solid var(--ink); display: grid; place-items: center; background: var(--card); }
+.callout .c-label { font-size: 9.5px; font-weight: 700; letter-spacing: .07em; text-transform: uppercase; color: var(--muted); margin-bottom: 2px; }
+.callout .c-text { font-size: 12px; color: var(--ink-2); }
+.callout.k-tip { background: var(--good-bg); border-color: color-mix(in srgb, var(--good) 35%, transparent); }
+.callout.k-warn { background: var(--bad-bg); border-color: color-mix(in srgb, var(--bad) 35%, transparent); }
+.callout.k-insight, .callout.k-decision { background: var(--violet); border-color: color-mix(in srgb, #7c63d0 35%, transparent); }
+.callout.k-next, .callout.k-info { background: var(--card-2); border-color: var(--line-strong); }
+.changes-title { font-size: 10.5px; font-weight: 700; letter-spacing: .07em; text-transform: uppercase; color: var(--muted); margin: 4px 0 8px; }
+.changes { list-style: none; margin: 0 0 8px; padding: 0; }
+.changes li { display: grid; grid-template-columns: 16px 1fr; gap: 8px; margin-bottom: 6px; font-size: 12px; color: var(--ink-2); }
+.changes .mk { width: 14px; height: 14px; border-radius: 3px; font-size: 10px; line-height: 14px; text-align: center; font-weight: 800; margin-top: 2px; }
+.mk.add { background: var(--good-bg); color: var(--good); } .mk.mod { background: var(--warn-bg); color: var(--warn); } .mk.del { background: var(--bad-bg); color: var(--bad); }
+.nav { display: grid; grid-template-columns: auto 1fr; gap: 10px; margin-top: 12px; }
+.btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; height: 38px; padding: 0 14px; border: 1.5px solid var(--ink); border-radius: 8px; background: var(--card); box-shadow: 0 2px 0 var(--ink); cursor: pointer; font-weight: 700; font-size: 12.5px; color: var(--ink); }
+.btn:disabled { opacity: .4; cursor: default; }
+.btn:not(:disabled):active { transform: translateY(2px); box-shadow: none; }
+.btn.primary { background: var(--green); justify-content: space-between; min-width: 0; }
+.btn.primary span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.keys { margin-top: 8px; text-align: center; color: var(--muted-2); font-size: 10.5px; }
+.keys kbd { font-family: var(--font); font-size: 9.5px; border: 1px solid var(--line-strong); border-radius: 3px; padding: 0 4px; background: var(--card); }
+.goals-card { background: var(--sheet); border: 1px solid var(--line); border-radius: var(--radius); padding: 14px 16px; }
+.goals-card h3 { margin: 0 0 10px; font-size: 12px; letter-spacing: .06em; text-transform: uppercase; }
+.goals { list-style: none; margin: 0; padding: 0; }
+.goals li { display: grid; grid-template-columns: 18px 1fr; gap: 8px; margin-bottom: 7px; font-size: 12px; color: var(--muted); cursor: pointer; }
+.goals li .box { width: 15px; height: 15px; border: 1.3px solid var(--muted-2); border-radius: 3px; margin-top: 2px; display: grid; place-items: center; font-size: 10px; font-weight: 800; color: transparent; }
+.goals li.on { color: var(--ink-2); }
+.goals li.on .box { background: var(--green-2); border-color: var(--ink); color: var(--ink); }
+
+/* overview */
+.overview { grid-column: 1 / -1; overflow: auto; padding: 10px 8px 40px; }
+.ov-hero { max-width: 1100px; margin: 20px auto 28px; }
+.ov-hero h1 { font-size: 34px; margin: 0 0 6px; }
+.ov-hero p { color: var(--muted); margin: 0 0 16px; max-width: 760px; font-size: 14px; }
+.ov-sec { max-width: 1100px; margin: 0 auto 26px; }
+.ov-sec h2 { display: flex; align-items: center; gap: 10px; font-size: 15px; margin: 0 0 12px; }
+.ov-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 14px; }
+.ov-card { display: flex; flex-direction: column; gap: 8px; padding: 16px; background: var(--sheet); border: 1.5px solid var(--ink); border-radius: 12px; box-shadow: 0 3px 0 var(--ink); text-decoration: none; color: var(--ink); transition: transform .15s; }
+.ov-card:hover { transform: translateY(-2px); }
+.ov-card h3 { margin: 0; font-size: 16px; }
+.ov-card p { margin: 0; color: var(--muted); font-size: 12px; flex: 1; }
+.ov-card .badges { justify-content: flex-start; }
+
+/* ---------- svg bits ---------- */
+.link { fill: none; stroke: var(--wire); stroke-width: 1.9px; stroke-linecap: round; stroke-linejoin: round; transition: stroke .4s; }
+.link--dashed { stroke-dasharray: 5 4.5; }
+.link--off { stroke: var(--wire-off); stroke-width: 1.6px; stroke-dasharray: 4 5; }
+.link--hot { stroke: #c0392b; stroke-width: 2.2px; }
+.link--good { stroke: #2f8a43; stroke-width: 2.1px; }
+.arrowhead { fill: var(--wire); stroke: var(--wire); }
+.arrowhead.off { fill: var(--wire-off); stroke: var(--wire-off); }
+.arrowhead.hot { fill: #c0392b; stroke: #c0392b; }
+.arrowhead.good { fill: #2f8a43; stroke: #2f8a43; }
+.grid-line { stroke: var(--grid); }
+.pkt circle, .pkt rect { fill: #f3b47f; stroke: #1d1b18; stroke-width: 1.5px; transition: fill .2s; }
+.pkt--res circle { fill: #9fd28f; }
+.pkt--retry circle, .pkt--slow circle { fill: #efb041; }
+.pkt--ping circle { fill: #f4fbef; stroke: #2f8a43; stroke-width: 2.1px; }
+.pkt--event circle { fill: #b79ce6; }
+.pkt--write rect { fill: #5d5466; }
+.pkt--msg rect { fill: #efb041; }
+.pkt--heavy rect { fill: #e8834d; stroke-width: 1.7px; }
+.pkt--fail circle { fill: #e5534b; stroke: #8f2a22; }
+.pkt.back circle { fill: #9fd28f; }
+.pkt--ping.back circle { fill: #9fd28f; stroke: #2f8a43; }
+.pkt.held circle { animation: held .8s ease-in-out infinite; }
+.pkt.leave { opacity: 0; transition: opacity .25s; }
+@keyframes held { 50% { opacity: .35; } }
+.fx-ring, .fx-x, .spot { transform-box: fill-box; transform-origin: 50% 50%; }
+.fx--fail .fx-ring { fill: #e5534b; stroke: #8f2a22; stroke-width: 1.4px; animation: fx-burst .65s ease-out forwards; }
+.fx--fail .fx-x { fill: none; stroke: #fff; stroke-width: 1.9px; stroke-linecap: round; animation: fx-fade .65s ease-out forwards; }
+.fx--ok .fx-ring { fill: none; stroke: #3fa456; stroke-width: 1.6px; animation: fx-pop .45s ease-out forwards; }
+@keyframes fx-burst { 0% { transform: scale(.6); opacity: 1; } 60% { transform: scale(1.25); opacity: 1; } 100% { transform: scale(1.4); opacity: 0; } }
+@keyframes fx-fade { 0%, 60% { opacity: 1; } 100% { opacity: 0; } }
+@keyframes fx-pop { 0% { transform: scale(.4); opacity: .9; } 100% { transform: scale(2.2); opacity: 0; } }
+.spot { fill: #f6cd82; opacity: 0; animation: spot 1.6s ease-out forwards; }
+@keyframes spot { 0% { opacity: 0; transform: scale(.85); } 25% { opacity: .55; transform: scale(1); } 100% { opacity: 0; transform: scale(1.08); } }
+.pulse { animation: pulse 1.6s ease-in-out infinite; }
+@keyframes pulse { 50% { opacity: .45; } }
+html.paused .pulse, html.paused .pkt.held circle { animation-play-state: paused; }
+
+/* ---------- responsive ---------- */
+@media (max-width: 1180px) {
+  body { overflow: auto; }
+  .app { height: auto; min-height: 100vh; }
+  .body, html.no-sidebar .body, html.presenter .body { grid-template-columns: 1fr; }
+  .sidebar { display: none; }
+  .stage-card { min-height: 62vh; }
+  .step-card { min-height: 0; }
+  .topbar .sub { display: none; }
+}
+</style>
+</head>
+<body>
+<div class="app">
+  <header class="topbar" id="topbar"></header>
+  <div class="body" id="body"></div>
+</div>
+<script>
+"use strict";
+const DECK = /*__DECK__*/null;
+const ICONS = /*__ICONS__*/{};
+
+/* ============================== i18n ============================== */
+const I18N = {
+  en: {
+    step: "Step", of: "of", lesson: "Lesson", back: "Back", next: "Next", finish: "Finish", nextLesson: "Next lesson", restart: "Start over",
+    whatChanged: "What changed", youllLearn: "You’ll learn", inThisLesson: "In this walkthrough", replay: "Replay", pause: "Pause", play: "Play", fit: "Fit",
+    min: "min", steps: "steps", progress: "Progress", overview: "Overview", lessons: "walkthroughs", illustrative: "illustrative numbers", start: "Start",
+    present: "Present", theme: "Theme", keys: "step", keyReplay: "replay", keyPause: "pause", keyPresent: "present",
+    levels: { beginner: "Beginner", intermediate: "Intermediate", advanced: "Advanced" },
+    chapters: { setup: "Setup", context: "Context", problem: "Problem", solution: "Solution", technique: "How it works", tradeoff: "Trade-off", insight: "Insight", decision: "Decision", demo: "Demo", result: "Result", recap: "Recap" },
+    callouts: { warn: "Watch out", tip: "Good to know", insight: "Key idea", decision: "Decision", next: "Up next", info: "Note" },
+    legend: { req: "request", res: "response", retry: "retry", slow: "slow request", ping: "health check", event: "event", write: "write", msg: "message", heavy: "large payload", fail: "failed request" }
+  },
+  es: {
+    step: "Paso", of: "de", lesson: "Tema", back: "Atrás", next: "Siguiente", finish: "Terminar", nextLesson: "Siguiente tema", restart: "Volver a empezar",
+    whatChanged: "Qué cambió", youllLearn: "Aprenderás", inThisLesson: "En este recorrido", replay: "Repetir", pause: "Pausa", play: "Reanudar", fit: "Ajustar",
+    min: "min", steps: "pasos", progress: "Progreso", overview: "Resumen", lessons: "recorridos", illustrative: "cifras ilustrativas", start: "Empezar",
+    present: "Presentar", theme: "Tema", keys: "paso", keyReplay: "repetir", keyPause: "pausa", keyPresent: "presentar",
+    levels: { beginner: "Básico", intermediate: "Intermedio", advanced: "Avanzado" },
+    chapters: { setup: "Contexto", context: "Contexto", problem: "Problema", solution: "Solución", technique: "Cómo funciona", tradeoff: "Compromiso", insight: "Idea clave", decision: "Decisión", demo: "Demo", result: "Resultado", recap: "Resumen" },
+    callouts: { warn: "Cuidado", tip: "Bueno saber", insight: "Idea clave", decision: "Decisión", next: "A continuación", info: "Nota" },
+    legend: { req: "petición", res: "respuesta", retry: "reintento", slow: "petición lenta", ping: "health check", event: "evento", write: "escritura", msg: "mensaje", heavy: "carga pesada", fail: "petición fallida" }
+  }
+};
+const deepMerge = (a, b) => { const o = { ...a }; for (const [k, v] of Object.entries(b || {})) o[k] = v && typeof v === "object" && !Array.isArray(v) ? deepMerge(a?.[k] || {}, v) : v; return o; };
+const L = deepMerge(I18N[(DECK && DECK.lang) || "en"] || I18N.en, (DECK && DECK.ui) || {});
+document.documentElement.lang = (DECK && DECK.lang) || "en";
+
+/* ============================== utils ============================== */
+const INK = "#1d1b18";
+const r2 = v => Math.round(v * 100) / 100;
+const clamp01 = v => Math.max(0, Math.min(1, v));
+const lerp = (a, b, t) => a + (b - a) * t;
+const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+const EASE = { inOut: t => t < .5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2, out: t => 1 - Math.pow(1 - t, 3), back: t => 1 + 2.2 * Math.pow(t - 1, 3) + 1.2 * Math.pow(t - 1, 2) };
+const ICON_ALIAS = { home: "house", trash: "trash2", warning: "alert", "alert-triangle": "alert", "dollar-sign": "dollar", "refresh-cw": "refresh", "message-square": "message", "bar-chart": "chartBar", "pie-chart": "chartPie" };
+const iconKey = n => { if (!n) return null; n = ICON_ALIAS[n] || n; if (ICONS[n]) return n; const c = String(n).replace(/-([a-z0-9])/g, (_, ch) => ch.toUpperCase()); return ICONS[c] ? c : null; };
+const iconInner = d => d.map(([tag, a]) => `<${tag} ${Object.entries(a).map(([k, v]) => `${k}="${v}"`).join(" ")}/>`).join("");
+function icon(name, size = 16, stroke = 1.8) { const k = iconKey(name); if (!k) return ""; return `<svg class="i" width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="${stroke}" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${iconInner(ICONS[k])}</svg>`; }
+function iconG(name, cx, cy, size = 22, { stroke = 1.9, color = INK } = {}) { const k = iconKey(name); if (!k) return ""; const s = size / 24; return `<g transform="translate(${r2(cx - size / 2)} ${r2(cy - size / 2)}) scale(${r2(s)})" fill="none" stroke="${color}" stroke-width="${r2(stroke / s)}" stroke-linecap="round" stroke-linejoin="round">${iconInner(ICONS[k])}</g>`; }
+const textW = (t, size) => [...String(t)].reduce((w, ch) => w + (/[\u1100-\u115F\u2E80-\uA4CF\uAC00-\uD7A3\uF900-\uFAFF\uFE30-\uFE4F\uFF00-\uFF60]/.test(ch) ? 1 : .6), 0) * size;
+
+/* ============================== geometry ============================== */
+const U = 14;
+const P = (x, y, z = 0) => [r2(U * (x + y)), r2(U / 2 * (x - y) - z)];
+function roundPoly(pts, rad) {
+  const n = pts.length, r = i => Array.isArray(rad) ? rad[i] : rad;
+  const toward = (a, b, d) => { const dx = b[0] - a[0], dy = b[1] - a[1], len = Math.hypot(dx, dy) || 1, k = Math.min(d, len / 2) / len; return [a[0] + dx * k, a[1] + dy * k]; };
+  let d = "";
+  for (let i = 0; i < n; i++) { const p = pts[(i - 1 + n) % n], c = pts[i], q = pts[(i + 1) % n], a = toward(c, p, r(i)), b = toward(c, q, r(i)); d += `${i ? "L" : "M"}${r2(a[0])},${r2(a[1])} Q${r2(c[0])},${r2(c[1])} ${r2(b[0])},${r2(b[1])} `; }
+  return d + "Z";
+}
+function roundLine(pts, rad = 9) {
+  if (!pts.length) return "";
+  let d = `M${r2(pts[0][0])},${r2(pts[0][1])}`;
+  for (let i = 1; i < pts.length - 1; i++) {
+    const [ax, ay] = pts[i - 1], [bx, by] = pts[i], [cx, cy] = pts[i + 1], l1 = Math.hypot(bx - ax, by - ay), l2 = Math.hypot(cx - bx, cy - by);
+    if (l1 < .01 || l2 < .01) continue;
+    const f = Math.min(rad, l1 / 2, l2 / 2);
+    d += ` L${r2(bx + (ax - bx) / l1 * f)},${r2(by + (ay - by) / l1 * f)} Q${r2(bx)},${r2(by)} ${r2(bx + (cx - bx) / l2 * f)},${r2(by + (cy - by) / l2 * f)}`;
+  }
+  const last = pts[pts.length - 1];
+  return d + ` L${r2(last[0])},${r2(last[1])}`;
+}
+function inConvex([x, y], poly) {
+  let sign = 0;
+  for (let i = 0; i < poly.length; i++) {
+    const [ax, ay] = poly[i], [bx, by] = poly[(i + 1) % poly.length], c = (bx - ax) * (y - ay) - (by - ay) * (x - ax);
+    if (Math.abs(c) < 1e-9) continue;
+    if (!sign) sign = Math.sign(c); else if (Math.sign(c) !== sign) return false;
+  }
+  return true;
+}
+function clipStart(pts, poly, gap) {
+  if (!poly || pts.length < 2 || !inConvex(pts[0], poly)) return pts;
+  for (let i = 0; i < pts.length - 1; i++) {
+    const a = pts[i], b = pts[i + 1];
+    if (inConvex(b, poly)) continue;
+    let lo = 0, hi = 1;
+    for (let k = 0; k < 28; k++) { const m = (lo + hi) / 2; inConvex([a[0] + (b[0] - a[0]) * m, a[1] + (b[1] - a[1]) * m], poly) ? lo = m : hi = m; }
+    const len = Math.hypot(b[0] - a[0], b[1] - a[1]) || 1, t = Math.min(1, hi + gap / len);
+    return [[a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t], ...pts.slice(i + 1)];
+  }
+  return pts;
+}
+const clipEnd = (pts, poly, gap) => clipStart([...pts].reverse(), poly, gap).reverse();
+function polyLen(pts) { const seg = []; let tot = 0; for (let i = 0; i < pts.length - 1; i++) { const l = Math.hypot(pts[i + 1][0] - pts[i][0], pts[i + 1][1] - pts[i][1]); seg.push(l); tot += l; } return { seg, tot }; }
+function pointAt(pts, dist, lens = polyLen(pts)) {
+  let d = Math.max(0, Math.min(lens.tot, dist));
+  for (let i = 0; i < lens.seg.length; i++) {
+    if (d <= lens.seg[i] || i === lens.seg.length - 1) { const k = lens.seg[i] ? Math.min(1, d / lens.seg[i]) : 0, [ax, ay] = pts[i], [bx, by] = pts[i + 1]; return { x: ax + (bx - ax) * k, y: ay + (by - ay) * k, dx: (bx - ax) / (lens.seg[i] || 1), dy: (by - ay) / (lens.seg[i] || 1) }; }
+    d -= lens.seg[i];
+  }
+  return { x: pts[0][0], y: pts[0][1], dx: 1, dy: 0 };
+}
+const bbox = (pts, pad = [0, 0, 0, 0]) => { const xs = pts.map(p => p[0]), ys = pts.map(p => p[1]); return [Math.min(...xs) - pad[0], Math.min(...ys) - pad[1], Math.max(...xs) + pad[2], Math.max(...ys) + pad[3]]; };
+const overlap = (a, b) => Math.max(0, Math.min(a[2], b[2]) - Math.max(a[0], b[0])) * Math.max(0, Math.min(a[3], b[3]) - Math.max(a[1], b[1]));
+function boxGeo(x0, x1, y0, y1, h) {
+  const T = P(x0, y1, h), R = P(x1, y1, h), B = P(x1, y0, h), Lf = P(x0, y0, h), R0 = P(x1, y1, 0), B0 = P(x1, y0, 0), L0 = P(x0, y0, 0);
+  return { T, R, B, L: Lf, R0, B0, L0, outline: [T, R, R0, B0, L0, Lf], top: [T, R, B, Lf], right: [B, R, R0, B0], left: [Lf, B, B0, L0] };
+}
+const lifted = (pts, lift) => pts.map(([x, y]) => [x, y - lift]);
+
+/* ============================== palettes ============================== */
+const PAL = {
+  blue: { top: ["#eef4fc", "#dbe8f7"], side: ["#bed5ef", "#a9c5e8"] },
+  green: { top: ["#f0f8e8", "#dfeecf"], side: ["#c6e2ae", "#b2d491"] },
+  orange: { top: ["#fff1e4", "#fde0c5"], side: ["#f8c7a0", "#f3b47f"] },
+  yellow: { top: ["#fff5dc", "#fee7b8"], side: ["#fcdb9c", "#f6cd82"] },
+  purple: { top: ["#f4eefb", "#e6dbf4"], side: ["#dacdef", "#cbbae6"] },
+  red: { top: ["#fdeeec", "#f9dad6"], side: ["#f3bcb6", "#eba39b"] },
+  teal: { top: ["#e9f6f4", "#d1ece8"], side: ["#acdcd4", "#91d0c6"] },
+  pink: { top: ["#fdeef4", "#f9d9e7"], side: ["#f2bbd1", "#eaa4c1"] },
+  gray: { top: ["#f3f0ec", "#e5e0d9"], side: ["#d5cec5", "#c4bcb1"] },
+  slab: { top: ["#f8f2ea", "#f0e7dc"], side: ["#ece2d5", "#e3d7c8"] },
+  dark: { top: ["#8b8580", "#6e6862"], side: ["#55504b", "#3d3935"] }
+};
+const TONES = { paper: { bg: "#fbf6ef", fg: INK }, red: { bg: "#f8d5cf", fg: "#8f2a22" }, green: { bg: "#dcefd2", fg: "#24521c" }, amber: { bg: "#fbe5bd", fg: "#6d4a0c" }, violet: { bg: "#e7ddf5", fg: "#47306f" }, blue: { bg: "#d9e7f7", fg: "#1f4f80" }, gray: { bg: "#ebe5dc", fg: "#5f5850" }, teal: { bg: "#d1ece8", fg: "#1d5c55" } };
+const PEOPLE = ["#F3B47F", "#A9C5E8", "#B3D79F", "#CBBAE6", "#F6CD82"];
+function defsSvg() {
+  let g = "";
+  for (const [k, p] of Object.entries(PAL)) g += `<linearGradient id="g-${k}-top" x1="0" y1="0" x2=".35" y2="1"><stop offset="0" stop-color="${p.top[0]}"/><stop offset="1" stop-color="${p.top[1]}"/></linearGradient><linearGradient id="g-${k}-side" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${p.side[0]}"/><stop offset="1" stop-color="${p.side[1]}"/></linearGradient>`;
+  return `${g}
+  <linearGradient id="screen" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#E3D6F3"/><stop offset="1" stop-color="#C9B5E6"/></linearGradient>
+  <filter id="blur-sm" x="-20%" y="-20%" width="140%" height="140%"><feGaussianBlur stdDeviation="2.2"/></filter>
+  <filter id="blur-lg" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation="6"/></filter>
+  <filter id="glow" x="-40%" y="-40%" width="180%" height="180%"><feGaussianBlur stdDeviation="9"/></filter>
+  ${["", "off", "hot", "good"].map(k => `<marker id="arrow${k ? "-" + k : ""}" viewBox="0 0 10 10" refX="8.6" refY="5" markerWidth="5.2" markerHeight="5.2" orient="auto-start-reverse" markerUnits="strokeWidth"><path class="arrowhead ${k}" d="M1,1.2 L9,5 L1,8.8 Z" stroke-width="1" stroke-linejoin="round"/></marker>`).join("")}
+  <pattern id="iso-grid" patternUnits="userSpaceOnUse" x="0" y="-7" width="28" height="14"><path class="grid-line" d="M0 7 L14 0 L28 7 L14 14 Z" fill="none" stroke-opacity=".3" stroke-width=".8"/></pattern>
+  <radialGradient id="grid-fade" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#fff"/><stop offset=".45" stop-color="#fff" stop-opacity=".9"/><stop offset=".8" stop-color="#fff" stop-opacity=".3"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></radialGradient>
+  <mask id="grid-mask" maskUnits="userSpaceOnUse" x="-6000" y="-6000" width="12000" height="12000"><rect x="-6000" y="-6000" width="12000" height="12000" fill="url(#grid-fade)"/></mask>`;
+}
+
+/* ============================== svg primitives ============================== */
+function pillSize(text, iconName, size = 10.5) {
+  const lines = String(text).split("\n"), tw = Math.max(...lines.map(l => textW(l, size))), iw = iconKey(iconName) ? 15 : 0, lh = Math.round(size * 1.3);
+  return { w: tw + 18 + iw, h: 21 + (lines.length - 1) * lh, tw, iw, lines, lh };
+}
+function pill(cx, cy, text, { tone = "paper", icon: ic = null, size = 10.5 } = {}) {
+  const T = TONES[tone] || TONES.paper, m = pillSize(text, ic, size), x = cx - m.w / 2, y = cy - m.h / 2, tx = x + 9 + m.iw + m.tw / 2;
+  const texts = m.lines.map((l, i) => `<text x="${r2(tx)}" y="${r2(cy + size * .36 + (i - (m.lines.length - 1) / 2) * m.lh)}" text-anchor="middle" font-size="${size}" font-weight="700" fill="${T.fg}">${esc(l)}</text>`).join("");
+  return `<g class="pill"><rect x="${r2(x)}" y="${r2(y + 2)}" width="${r2(m.w)}" height="${m.h}" rx="10.5" fill="${INK}"/><rect x="${r2(x)}" y="${r2(y)}" width="${r2(m.w)}" height="${m.h}" rx="10.5" fill="${T.bg}" stroke="${INK}" stroke-width="1.3"/>${m.iw ? iconG(ic, x + 15, cy, 12, { stroke: 2.2, color: T.fg }) : ""}${texts}</g>`;
+}
+const pillRect = (cx, cy, text, ic) => { const m = pillSize(text, ic); return [cx - m.w / 2, cy - m.h / 2, cx + m.w / 2, cy + m.h / 2 + 2]; };
+function gauge(cx, cy, v) {
+  const pct = Math.round(clamp01(v) * 100), col = v < .6 ? "#7fc278" : v < .85 ? "#efb041" : "#e5534b", x = cx - 43, y = cy - 10.5;
+  return `<g class="pill"><rect x="${r2(x)}" y="${r2(y + 2)}" width="86" height="21" rx="10.5" fill="${INK}"/><rect x="${r2(x)}" y="${r2(y)}" width="86" height="21" rx="10.5" fill="#fbf6ef" stroke="${INK}" stroke-width="1.3"/>${iconG("cpu", x + 13, cy, 11, { stroke: 2.2, color: "#6f6961" })}<rect x="${r2(x + 23)}" y="${r2(cy - 3.5)}" width="28" height="7" rx="3.5" fill="#e6ddd0"/><rect x="${r2(x + 23)}" y="${r2(cy - 3.5)}" width="${r2(Math.max(3, 28 * clamp01(v)))}" height="7" rx="3.5" fill="${col}"/><text x="${r2(x + 77)}" y="${r2(cy + 3.6)}" text-anchor="end" font-size="10.5" font-weight="800" fill="${INK}">${pct}%</text></g>`;
+}
+const svgText = (x, y, t, size = 13, weight = 800, fill = INK, extra = "") => `<text x="${r2(x)}" y="${r2(y)}" text-anchor="middle" font-size="${size}" font-weight="${weight}" fill="${fill}" ${extra}>${esc(t)}</text>`;
+function solid(geo, color, { stroke = INK, sw = 1.9, r = 9 } = {}) {
+  const p = PAL[color] ? color : "blue", sil = roundPoly(geo.outline, [r, 6, 6, r + 1, 6, 6]);
+  return { sil, svg: `<path d="${sil}" fill="url(#g-${p}-side)"/><path d="${roundPoly(geo.right, [6, 6, 6, r + 1])}" fill="#2a1d0e" opacity=".07"/><path d="${roundPoly(geo.top, [r, 6, 6, 6])}" fill="url(#g-${p}-top)"/><path d="M${geo.L[0]},${geo.L[1] + 1.4} L${geo.B[0]},${geo.B[1] + 1.4} L${geo.R[0]},${geo.R[1] + 1.4}" fill="none" stroke="#fff" stroke-opacity=".7" stroke-width="1.5" stroke-linecap="round"/><path d="M${geo.B[0]},${geo.B[1] + 2} L${geo.B0[0]},${geo.B0[1] - 4}" stroke="#2a1d0e" stroke-opacity=".12" stroke-width="1.2"/><path d="${sil}" fill="none" stroke="${stroke}" stroke-width="${sw}" stroke-linejoin="round"/>` };
+}
+const floorShadow = (sil, lift, op = .24) => `<path d="${sil}" transform="translate(0 ${r2(6 + lift)})" fill="#6b5236" opacity="${r2(op * (1 - Math.min(1, lift / 140) * .85))}" filter="url(#blur-lg)"/>`;
+const asLines = l => Array.isArray(l) ? l : (l ? String(l).split("\n") : []);
+function stackPills(e, cx, startY, dir) {
+  let svg = "", y = startY; const rects = [];
+  if (e.cpu >= 0) { svg += gauge(cx, y, e.cpu); rects.push([cx - 43, y - 11, cx + 43, y + 13]); y += dir * 26; }
+  for (const t of e.tags || []) { const tg = typeof t === "string" ? { text: t } : t; svg += pill(cx, y, tg.text, tg); rects.push(pillRect(cx, y, tg.text, tg.icon)); y += dir * 26; }
+  return { svg, rects };
+}
+
+/* ============================== entity renderers ============================== */
+const DEFAULTS = {
+  service: { s: 4, h: 46, color: "blue", icon: "server", label: [], sub: "", heat: 0, cpu: -1, dead: 0, dim: 0, opacity: 1, lift: 0, tags: [], pills: "above" },
+  users: { s: 7, count: 12, label: "", tags: [], opacity: 1, lift: 0, dim: 0 },
+  db: { r: 1.7, h: 40, color: "purple", icon: "database", label: "", tags: [], heat: 0, dead: 0, dim: 0, opacity: 1, lift: 0, cpu: -1 },
+  queue: { n: 4, dir: [0, 1], color: "yellow", label: "", tags: [], opacity: 1, lift: 0, dim: 0 },
+  device: { form: "laptop", label: "", tags: [], opacity: 1, lift: 0, dim: 0 },
+  zone: { label: "", tone: "blue", opacity: 1, icon: null },
+  note: { text: "", tone: "paper", icon: null, z: 0, opacity: 1, lift: 0 }
+};
+DEFAULTS.block = DEFAULTS.service; DEFAULTS.crowd = DEFAULTS.users;
+const R = {};
+R.service = e => {
+  const t = e.s / 2, geo = boxGeo(e.x - t, e.x + t, e.y - t, e.y + t, e.h), lift = e.lift, { sil, svg } = solid(geo, e.color);
+  const cx = geo.T[0], ty = (geo.T[1] + geo.B[1]) / 2, lines = asLines(e.label), ly = ty + (e.s * U * .5 + e.h) * .4;
+  const fade = 1 - e.dead * .5 - e.dim * .35;
+  let label = "";
+  if (lines.length === 1) label = e.sub ? svgText(cx, ly, lines[0], 13.5) + svgText(cx, ly + 14, e.sub, 10, 600) : svgText(cx, ly + 4.5, lines[0], 13.5);
+  else if (lines.length >= 2) label = e.sub ? svgText(cx, ly - 9, lines[0], 13) + svgText(cx, ly + 6.5, lines[1], 13) + svgText(cx, ly + 20.5, e.sub, 10, 600) : svgText(cx, ly - 3.5, lines[0], 13) + svgText(cx, ly + 12, lines[1], 13);
+  const isz = e.s >= 6 ? 28 : e.s < 3.5 ? 19 : 24;
+  const glyph = e.dead > .5 ? "" : iconG(e.icon, cx, lines.length ? ty - 1 : ty + 4, isz);
+  const body = `<g opacity="${r2(e.opacity)}">${floorShadow(sil, lift)}<g transform="translate(0 ${r2(-lift)})">
+    ${e.heat > .01 ? `<g class="pulse"><path d="${sil}" fill="#f0552f" opacity="${r2(e.heat * .65)}" filter="url(#glow)"/></g>` : ""}
+    ${svg}
+    ${e.heat > .01 ? `<path d="${sil}" fill="#f0552f" opacity="${r2(e.heat * .28)}"/>` : ""}
+    ${e.dead > .01 ? `<path d="${sil}" fill="#b9b2a8" opacity="${r2(e.dead * .62)}"/><path d="${sil}" fill="none" stroke="${INK}" stroke-width="1.9"/>` : ""}
+    ${e.dim > .01 ? `<path d="${sil}" fill="#f4ebe0" opacity="${r2(e.dim * .5)}"/>` : ""}
+    <g opacity="${r2(fade)}">${glyph}${label}</g>
+    ${e.dead > .01 ? `<g opacity="${r2(e.dead)}" stroke="#c0392b" stroke-width="3.2" stroke-linecap="round"><path d="M${r2(cx - 9)},${r2(ty - 10)} L${r2(cx + 9)},${r2(ty + 8)} M${r2(cx + 9)},${r2(ty - 10)} L${r2(cx - 9)},${r2(ty + 8)}"/></g>` : ""}
+  </g></g>`;
+  const below = e.pills === "below", pills = stackPills(e, cx, below ? geo.B0[1] - lift + 22 : geo.T[1] - lift - 17, below ? 1 : -1);
+  const poly = lifted(geo.outline, lift);
+  return { body, over: pills.svg ? `<g opacity="${r2(e.opacity)}">${pills.svg}</g>` : "", poly, rects: [bbox(poly, [6, 6, 6, 8]), ...pills.rects], center: P(e.x, e.y, 0) };
+};
+R.block = R.service;
+R.users = e => {
+  const sx = e.sx ?? e.s, sy = e.sy ?? e.s, x0 = e.x - sx / 2, x1 = e.x + sx / 2, y0 = e.y - sy / 2, y1 = e.y + sy / 2, H = 10, geo = boxGeo(x0, x1, y0, y1, H), lift = e.lift;
+  const { sil, svg } = solid(geo, "slab", { stroke: "#3b3631", sw: 1.5, r: 8 });
+  const gap = 1.75, ni = Math.floor((sx / 2 - .85) / gap), nj = Math.floor((sy / 2 - .85) / gap), cells = [];
+  for (let i = -ni; i <= ni; i++) for (let j = -nj; j <= nj; j++) { const h = Math.sin(i * 127.1 + j * 311.7) * 43758.5453; cells.push({ i, j, key: Math.abs(i) + Math.abs(j) * .7 + (h - Math.floor(h)) * 1.6 }); }
+  cells.sort((a, b) => a.key - b.key);
+  const people = cells.map((c, k) => ({ ...c, a: clamp01(e.count - k) })).filter(c => c.a > .01).sort((a, b) => (a.i - a.j) - (b.i - b.j)).map(c => {
+    const [px, py] = P(e.x + c.i * gap, e.y + c.j * gap, H), s = (.35 + .65 * c.a) * 1.3, col = PEOPLE[Math.abs(c.i * 3 + c.j * 7) % PEOPLE.length];
+    return `<g opacity="${r2(c.a)}" transform="translate(${px} ${r2(py - (1 - c.a) * 10)}) scale(${r2(s)})"><ellipse rx="5.6" ry="2.8" fill="#6b5236" opacity=".18"/><path d="M-5.2,0 V-9 A5.2,5.2 0 0 1 5.2,-9 V0 A5.2,2.4 0 0 1 -5.2,0 Z" fill="${col}" stroke="${INK}" stroke-width="1.25"/><circle cy="-17.6" r="4.3" fill="#fdf6ec" stroke="${INK}" stroke-width="1.25"/></g>`;
+  }).join("");
+  const body = `<g opacity="${r2(e.opacity * (1 - e.dim * .4))}">${floorShadow(sil, lift, .2)}<g transform="translate(0 ${r2(-lift)})">${svg}${people}</g></g>`;
+  const [bx, by] = P(x1, y0, 0), poly = lifted(geo.outline, lift);
+  let over = "", rects = [bbox(poly, [6, 34, 6, 6])];
+  if (e.label) { over += pill(bx, by - lift + 24, e.label, { icon: "users" }); rects.push(pillRect(bx, by - lift + 24, e.label, "users")); }
+  const pills = stackPills({ ...e, cpu: -1 }, geo.T[0], geo.T[1] - lift - 44, -1); over += pills.svg; rects.push(...pills.rects);
+  return { body, over: over ? `<g opacity="${r2(e.opacity)}">${over}</g>` : "", poly, rects, center: P(e.x, e.y, 0) };
+};
+R.crowd = R.users;
+R.db = e => {
+  const [cx, cy] = P(e.x, e.y, 0), lift = e.lift, rx = e.r * U * Math.SQRT2, ry = rx / 2, top = cy - e.h - lift, bot = cy - lift, p = PAL[e.color] ? e.color : "purple";
+  const bodyPath = `M${r2(cx - rx)},${r2(top)} V${r2(bot)} A${r2(rx)},${r2(ry)} 0 0 0 ${r2(cx + rx)},${r2(bot)} V${r2(top)} Z`;
+  const ring = y => `<path d="M${r2(cx - rx)},${r2(y)} A${r2(rx)},${r2(ry)} 0 0 0 ${r2(cx + rx)},${r2(y)}" fill="none" stroke="${INK}" stroke-opacity=".35" stroke-width="1.2"/>`;
+  const sil = `M${r2(cx - rx)},${r2(top)} V${r2(bot)} A${r2(rx)},${r2(ry)} 0 0 0 ${r2(cx + rx)},${r2(bot)} V${r2(top)} A${r2(rx)},${r2(ry)} 0 0 0 ${r2(cx - rx)},${r2(top)} Z`;
+  const body = `<g opacity="${r2(e.opacity)}"><ellipse cx="${cx}" cy="${r2(cy + 6)}" rx="${r2(rx)}" ry="${r2(ry)}" fill="#6b5236" opacity=".2" filter="url(#blur-lg)"/>
+    ${e.heat > .01 ? `<g class="pulse"><path d="${sil}" fill="#f0552f" opacity="${r2(e.heat * .6)}" filter="url(#glow)"/></g>` : ""}
+    <path d="${bodyPath}" fill="url(#g-${p}-side)"/>${ring(top + e.h * .36)}${ring(top + e.h * .68)}
+    <ellipse cx="${cx}" cy="${r2(top)}" rx="${r2(rx)}" ry="${r2(ry)}" fill="url(#g-${p}-top)"/>
+    ${e.heat > .01 ? `<path d="${sil}" fill="#f0552f" opacity="${r2(e.heat * .25)}"/>` : ""}
+    ${e.dead > .01 ? `<path d="${sil}" fill="#b9b2a8" opacity="${r2(e.dead * .62)}"/>` : ""}
+    ${e.dim > .01 ? `<path d="${sil}" fill="#f4ebe0" opacity="${r2(e.dim * .5)}"/>` : ""}
+    <path d="${sil}" fill="none" stroke="${INK}" stroke-width="1.9" stroke-linejoin="round"/><ellipse cx="${cx}" cy="${r2(top)}" rx="${r2(rx)}" ry="${r2(ry)}" fill="none" stroke="${INK}" stroke-width="1.6"/>
+    ${e.dead > .5 ? `<g stroke="#c0392b" stroke-width="3" stroke-linecap="round"><path d="M${r2(cx - 7)},${r2(top - 6)} L${r2(cx + 7)},${r2(top + 6)} M${r2(cx + 7)},${r2(top - 6)} L${r2(cx - 7)},${r2(top + 6)}"/></g>` : iconG(e.icon, cx, top, Math.min(18, ry * 1.3), { stroke: 2 })}</g>`;
+  const poly = []; for (let k = 0; k <= 12; k++) { const a = Math.PI * k / 12; poly.push([cx - rx * Math.cos(a), top - ry * Math.sin(a)]); } for (let k = 0; k <= 12; k++) { const a = Math.PI * k / 12; poly.push([cx + rx * Math.cos(a), bot + ry * Math.sin(a)]); }
+  let over = "", rects = [bbox(poly, [6, 6, 6, 6])];
+  if (e.label) { over += pill(cx, bot + ry + 18, e.label, { icon: null }); rects.push(pillRect(cx, bot + ry + 18, e.label)); }
+  const pills = stackPills(e, cx, top - ry - 16, -1); over += pills.svg; rects.push(...pills.rects);
+  return { body, over: over ? `<g opacity="${r2(e.opacity)}">${over}</g>` : "", poly, rects, center: [cx, cy] };
+};
+R.queue = e => {
+  const n = Math.max(0, e.n), k = Math.ceil(n), d = e.dir || [0, 1], len = Math.hypot(d[0], d[1]) || 1, ux = d[0] / len, uy = d[1] / len, sp = 1.55, cs = 1.25, h = 15, lift = e.lift;
+  const cubes = []; for (let i = 0; i < k; i++) { const off = (i - (k - 1) / 2) * sp; cubes.push({ x: e.x + ux * off, y: e.y + uy * off, a: clamp01(n - i) }); }
+  cubes.sort((a, b) => (a.x - a.y) - (b.x - b.y));
+  const body = cubes.map(c => { const g = boxGeo(c.x - cs / 2, c.x + cs / 2, c.y - cs / 2, c.y + cs / 2, h), { svg } = solid(g, e.color, { sw: 1.5, r: 3 }); return `<g opacity="${r2(c.a * e.opacity)}" transform="translate(0 ${r2(-lift - (1 - c.a) * 12)})">${svg}</g>`; }).join("");
+  const ext = Math.max(.1, (Math.max(k, 1) - 1) / 2 * sp) + cs / 2 + .3, gx = Math.abs(ux) * ext + cs / 2, gy = Math.abs(uy) * ext + cs / 2;
+  const geo = boxGeo(e.x - gx, e.x + gx, e.y - gy, e.y + gy, h), poly = lifted(geo.outline, lift);
+  const cx = P(e.x, e.y, 0)[0], bot = Math.max(...poly.map(p => p[1])), topY = Math.min(...poly.map(p => p[1])); let over = "", rects = [bbox(poly, [4, 4, 4, 4])];
+  if (e.label) { over += pill(cx, bot + 18, e.label, { icon: e.icon || "inbox" }); rects.push(pillRect(cx, bot + 18, e.label, e.icon || "inbox")); }
+  const pills = stackPills({ ...e, cpu: -1 }, cx, topY - 16, -1); over += pills.svg; rects.push(...pills.rects);
+  return { body: `<g opacity="${r2(e.opacity * (1 - e.dim * .4))}">${body}</g>`, over: over ? `<g opacity="${r2(e.opacity)}">${over}</g>` : "", poly, rects, center: P(e.x, e.y, 0) };
+};
+R.device = e => {
+  const lift = e.lift, phone = e.form === "phone";
+  const bx0 = e.x - (phone ? .9 : 1.7), bx1 = e.x + (phone ? .9 : 1.7), by0 = e.y - (phone ? 1.2 : 2.1), by1 = e.y + (phone ? 1.2 : 2.1);
+  const base = boxGeo(bx0, bx1, by0, by1, phone ? 4 : 6), b = solid(base, "slab", { stroke: "#3b3631", sw: 1.5, r: 6 });
+  const xs = bx0 + (phone ? .55 : .45), z0 = phone ? 6 : 8, z1 = phone ? 40 : 44, ya = by0 + .3, yb = by1 - .3;
+  const frame = [P(xs, ya, z1), P(xs, yb, z1), P(xs, yb, z0), P(xs, ya, z0)], scr = [P(xs, ya + .3, z1 - 4), P(xs, yb - .3, z1 - 4), P(xs, yb - .3, z0 + 4), P(xs, ya + .3, z0 + 4)];
+  const thick = [P(xs - .25, ya, z1), P(xs, ya, z1), P(xs, yb, z1), P(xs - .25, yb, z1)];
+  const body = `<g opacity="${r2(e.opacity * (1 - e.dim * .4))}">${floorShadow(b.sil, lift, .2)}<g transform="translate(0 ${r2(-lift)})">${b.svg}
+    <path d="${roundPoly(thick, 1.5)}" fill="#55504b" stroke="${INK}" stroke-width="1.2"/>
+    <path d="${roundPoly(frame, 3)}" fill="#3d3935" stroke="${INK}" stroke-width="1.5" stroke-linejoin="round"/>
+    <path d="${roundPoly(scr, 2)}" fill="url(#screen)"/>
+    ${iconG(e.icon || (phone ? "smartphone" : "user"), (scr[0][0] + scr[2][0]) / 2, (scr[0][1] + scr[2][1]) / 2, 16, { stroke: 2, color: "#47306f" })}</g></g>`;
+  const all = [...base.outline, ...frame], poly = lifted(boxGeo(bx0, bx1, by0, by1, z1).outline, lift), [lx, ly] = P(bx1, by0, 0), top = Math.min(...frame.map(p => p[1]));
+  let over = "", rects = [bbox(lifted(all, lift), [6, 6, 6, 6])];
+  if (e.label) { over += pill(lx, ly - lift + 22, e.label, { icon: "user" }); rects.push(pillRect(lx, ly - lift + 22, e.label, "user")); }
+  const tx = (frame[0][0] + frame[1][0]) / 2, pills = stackPills({ ...e, cpu: -1 }, tx, top - lift - 18, -1); over += pills.svg; rects.push(...pills.rects);
+  return { body, over: over ? `<g opacity="${r2(e.opacity)}">${over}</g>` : "", poly, rects, center: P(e.x, e.y, 0) };
+};
+R.zone = e => {
+  const x0 = e.x0 ?? e.x - (e.sx ?? 8) / 2, x1 = e.x1 ?? e.x + (e.sx ?? 8) / 2, y0 = e.y0 ?? e.y - (e.sy ?? 8) / 2, y1 = e.y1 ?? e.y + (e.sy ?? 8) / 2;
+  const pts = [P(x0, y1), P(x1, y1), P(x1, y0), P(x0, y0)], T = TONES[e.tone] || TONES.blue;
+  const body = `<g opacity="${r2(e.opacity)}"><path d="${roundPoly(pts, 12)}" fill="${T.bg}" fill-opacity=".45" stroke="${T.fg}" stroke-opacity=".55" stroke-width="1.4" stroke-dasharray="6 5"/></g>`;
+  let over = "", rects = [];
+  if (e.label) {
+    const m = pillSize(e.label, e.icon), at = e.labelAt || "bottom", [tx, ty] = P(x0, y1), [bx, by] = P(x1, y0), [lx, ly] = P(x0, y0), [rx, ry] = P(x1, y1);
+    const [cx, cy] = at === "top" ? [tx, ty - 16] : at === "left" ? [lx - m.w / 2 - 6, ly] : at === "right" ? [rx + m.w / 2 + 6, ry] : [bx, by + 16];
+    over = `<g opacity="${r2(e.opacity)}">${pill(cx, cy, e.label, { tone: e.tone, icon: e.icon })}</g>`; rects.push(pillRect(cx, cy, e.label, e.icon));
+  }
+  return { body, over, poly: null, rects, floorRect: bbox(pts), center: P((x0 + x1) / 2, (y0 + y1) / 2) };
+};
+R.note = e => {
+  const [cx, cy] = P(e.x, e.y, e.z + e.lift);
+  return { body: "", over: `<g opacity="${r2(e.opacity)}">${pill(cx, cy, e.text, { tone: e.tone, icon: e.icon })}</g>`, poly: null, rects: [pillRect(cx, cy, e.text, e.icon)], center: [cx, cy] };
+};
+const FLOOR_TYPES = new Set(["zone"]);
+const normEnt = e => ({ ...(DEFAULTS[e.type] || DEFAULTS.service), ...e, type: e.type || "service" });
+const depthOf = e => e.type === "note" ? 1e6 : (e.x ?? 0) - (e.y ?? 0);
+
+/* ============================== stage ============================== */
+const PACKET_SPEED = 155, KIND_SPEED = { slow: .33, heavy: .7, ping: .85 };
+class Stage {
+  constructor(host, hud, measureHud) {
+    this.host = host; this.hud = hud; this.measureHud = measureHud;
+    const NS = "http://www.w3.org/2000/svg";
+    this.svg = document.createElementNS(NS, "svg"); this.svg.setAttribute("preserveAspectRatio", "xMidYMid meet");
+    this.svg.innerHTML = `<defs>${defsSvg()}</defs><rect x="-6000" y="-6000" width="12000" height="12000" fill="url(#iso-grid)" mask="url(#grid-mask)"/><g class="l-floor"></g><g class="l-links"></g><g class="l-pkts"></g><g class="l-ents"></g><g class="l-over"></g>`;
+    host.appendChild(this.svg);
+    this.Lr = { floor: this.svg.querySelector(".l-floor"), links: this.svg.querySelector(".l-links"), pkts: this.svg.querySelector(".l-pkts"), ents: this.svg.querySelector(".l-ents"), over: this.svg.querySelector(".l-over") };
+    this.fade = this.svg.querySelector("#grid-fade");
+    this.ents = new Map(); this.links = new Map(); this.packets = []; this.flows = []; this.anim = null; this.paused = false; this.view = null;
+    this.cam = { x: -300, y: -200, w: 600, h: 400 }; this.scene = null; this.plan = null; this.corner = null; this.last = performance.now();
+    this.size = ""; new ResizeObserver(() => { const s = `${host.clientWidth}x${host.clientHeight}`; if (s !== this.size) { this.size = s; this.refit(); } }).observe(host);
+    this.gestures();
+    const loop = t => { this.tick(t); requestAnimationFrame(loop); }; requestAnimationFrame(loop);
+  }
+  /* ---------- layout of a target scene ---------- */
+  layout(scene) {
+    const geo = {}, rects = [], ents = {};
+    for (const [id, raw] of Object.entries(scene.entities || {})) { const e = normEnt(raw); ents[id] = e; const g = (R[e.type] || R.service)(e); geo[id] = g; rects.push(...g.rects); if (g.floorRect) rects.push(g.floorRect); }
+    const labels = {}, labelRects = {}, placed = [], linkPts = {};
+    for (const [id, lk] of Object.entries(scene.links || {})) {
+      const pts = this.linkPoints(lk, ents, geo); if (!pts) continue; linkPts[id] = pts;
+      for (const [x, y] of pts) rects.push([x - 3, y - 3, x + 3, y + 3]);
+    }
+    for (const [id, lk] of Object.entries(scene.links || {})) {
+      if (!lk.label || !linkPts[id]) continue;
+      const best = this.placeLabel(linkPts[id], lk, geo, placed, linkPts);
+      labels[id] = best.pick; labelRects[id] = best.rect; placed.push(best.rect); rects.push(best.rect);
+    }
+    return { geo, rects, labels, labelRects, linkPts, ents };
+  }
+  linkPoints(lk, ents, geo) {
+    const from = ents[lk.from], to = ents[lk.to]; if (!from || (!to && !lk.toPoint)) return null;
+    const comp = (v, axis) => { if (typeof v === "number") return v; const m = /^([\w-]+?)([+-][\d.]+)?$/.exec(String(v)); const e = m && ents[m[1]]; return (e ? (axis ? e.y : e.x) ?? 0 : 0) + (m && m[2] ? parseFloat(m[2]) : 0); };
+    const grid = [[from.x ?? 0, from.y ?? 0], ...(lk.via || []).map(p => typeof p === "string" ? [ents[p]?.x ?? 0, ents[p]?.y ?? 0] : [comp(p[0], 0), comp(p[1], 1)]), to ? [to.x ?? 0, to.y ?? 0] : lk.toPoint];
+    let pts = grid.map(([x, y]) => P(x, y, 0));
+    pts = clipStart(pts, geo[lk.from]?.poly, 3);
+    if (to) pts = clipEnd(pts, geo[lk.to]?.poly, lk.heads === "none" ? 3 : 4);
+    return pts;
+  }
+  placeLabel(pts, lk, geo, placed, allLinks) {
+    const m = pillSize(lk.label, lk.icon), lens = polyLen(pts), pref = lk.labelAt ?? .5, cands = [];
+    for (const dt of [0, -.1, .1, -.2, .2, -.3, .3]) {
+      const t = pref + dt; if (dt && (t < .12 || t > .88)) continue;
+      for (const side of [1, -1, 0]) cands.push({ t, side, pen: Math.abs(dt) * 60 + (side === 0 ? 14 : 0) + (side === -1 ? 1 : 0) });
+    }
+    let best = null;
+    for (const c of cands) {
+      const { cx, cy } = this.labelPos(pts, lens, c, m);
+      const rect = [cx - m.w / 2, cy - m.h / 2, cx + m.w / 2, cy + m.h / 2 + 2];
+      let cost = c.pen;
+      for (const g of Object.values(geo)) { for (const r of g.rects) { const o = overlap(rect, r); if (o) cost += 40 + o / 8; } }
+      for (const r of placed) { const o = overlap(rect, r); if (o) cost += 120 + o / 3; }
+      for (const lp of Object.values(allLinks)) if (lp !== pts) for (const [x, y] of lp) if (x > rect[0] && x < rect[2] && y > rect[1] && y < rect[3]) cost += 6;
+      if (!best || cost < best.cost) best = { cost, rect, pick: c };
+    }
+    return best;
+  }
+  labelPos(pts, lens, pick, m) {
+    const p = pointAt(pts, lens.tot * pick.t, lens); if (!pick.side) return { cx: p.x, cy: p.y };
+    let nx = -p.dy, ny = p.dx; if (ny > 0 || (Math.abs(ny) < .01 && nx < 0)) { nx = -nx; ny = -ny; } // normal pointing up
+    const off = Math.abs(nx) * (m.w / 2 + 8) + Math.abs(ny) * (m.h / 2 + 8);
+    return { cx: p.x + nx * off * pick.side, cy: p.y + ny * off * pick.side };
+  }
+  /* ---------- camera ---------- */
+  planCam(lay, card) {
+    const W = Math.max(1, this.host.clientWidth), H = Math.max(1, this.host.clientHeight), pad = 24, rects = lay.rects.length ? lay.rects : [[-100, -60, 100, 60]];
+    const bx0 = Math.min(...rects.map(r => r[0])), by0 = Math.min(...rects.map(r => r[1])), bx1 = Math.max(...rects.map(r => r[2])), by1 = Math.max(...rects.map(r => r[3]));
+    const bw = Math.max(1, bx1 - bx0), bh = Math.max(1, by1 - by0), MAX = 1.6;
+    const fitIn = (rx, ry, rw, rh) => { const s = Math.max(.25, Math.min(MAX, (rw) / bw, (rh) / bh)); return { s, cam: { x: bx0 - (rx + (rw - bw * s) / 2) / s, y: by0 - (ry + (rh - bh * s) / 2) / s, w: W / s, h: H / s } }; };
+    if (!card) return { ...fitIn(pad, pad, W - 2 * pad, H - 2 * pad), corner: null };
+    const cw = card.w, ch = card.h, M = 12, cardRect = c => [c[1] === "l" ? M : W - M - cw, c[0] === "t" ? M : H - M - ch, (c[1] === "l" ? M : W - M - cw) + cw, (c[0] === "t" ? M : H - M - ch) + ch];
+    const toPx = (f, r) => [(r[0] - f.cam.x) * f.s, (r[1] - f.cam.y) * f.s, (r[2] - f.cam.x) * f.s, (r[3] - f.cam.y) * f.s];
+    const order = card.corner && card.corner !== "auto" ? [card.corner] : [...new Set([this.corner, "br", "tr", "bl", "tl"].filter(Boolean))];
+    const full = fitIn(pad, pad, W - 2 * pad, H - 2 * pad);
+    for (const c of order) { const cr = cardRect(c), hit = rects.some(r => overlap(toPx(full, r), [cr[0] - 8, cr[1] - 8, cr[2] + 8, cr[3] + 8]) > 0); if (!hit) return { ...full, corner: c }; }
+    let best = null;
+    for (const c of order) {
+      const left = c[1] === "l", top = c[0] === "t";
+      const col = fitIn(left ? cw + M + pad : pad, pad, W - cw - M - 2 * pad, H - 2 * pad), row = fitIn(pad, top ? ch + M + pad : pad, W - 2 * pad, H - ch - M - 2 * pad);
+      for (const f of [col, row]) if (!best || f.s > best.s + .01) best = { ...f, corner: c };
+    }
+    return best;
+  }
+  displayCam() { const c = this.cam; if (!this.view) return c; const w = c.w / this.view.k, h = c.h / this.view.k; return { x: this.view.cx - w / 2, y: this.view.cy - h / 2, w, h }; }
+  applyCam() {
+    const c = this.displayCam(); this.svg.setAttribute("viewBox", `${r2(c.x)} ${r2(c.y)} ${r2(c.w)} ${r2(c.h)}`);
+    const cx = c.x + c.w / 2, cy = c.y + c.h / 2; this.fade.setAttribute("cx", r2(cx)); this.fade.setAttribute("cy", r2(cy)); this.fade.setAttribute("r", r2(c.w * .58));
+    this.fade.setAttribute("gradientTransform", `translate(${r2(cx)} ${r2(cy)}) scale(1 .62) translate(${r2(-cx)} ${r2(-cy)})`);
+  }
+  /* ---------- card ---------- */
+  cardHtml(card) {
+    if (!card) return "";
+    let inner = "";
+    if (card.bars) inner = `<div class="hud-bars">${card.bars.map(b => `<span>${esc(b.label)}</span><div class="track"><div class="seg t-${b.tone || "blue"}" style="left:${clamp01(b.from) * 100}%;width:${Math.max(1.5, (clamp01(b.to) - clamp01(b.from)) * 100)}%"></div>${b.note ? (clamp01(b.to) > .72 ? `<span class="note" style="right:${(1 - clamp01(b.from)) * 100}%;padding:0 5px 0 0">${esc(b.note)}</span>` : `<span class="note" style="left:${clamp01(b.to) * 100}%">${esc(b.note)}</span>`) : ""}</div>`).join("")}</div>`;
+    else if (card.table) { const [head, ...rows] = card.table; inner = `<table class="hud-table"><tr>${head.map(h => `<th>${esc(h)}</th>`).join("")}</tr>${rows.map(r => `<tr>${r.map(c => `<td>${esc(c)}</td>`).join("")}</tr>`).join("")}</table>`; }
+    if (card.lines) inner += `<div class="hud-lines">${card.lines.map(l => { const m = /^([!=#+])\s?/.exec(l), cls = m ? { "!": "l-warn", "=": "l-eq", "#": "l-dim", "+": "l-ok" }[m[1]] : ""; return `<div class="${cls}">${esc(m && m[1] !== "=" && m[1] !== "+" ? l.slice(m[0].length) : l) || "&nbsp;"}</div>`; }).join("")}</div>`;
+    return `<div class="hud-title">${icon(card.icon || "info", 14, 2)}<span>${esc(card.title || "")}</span></div>${inner}`;
+  }
+  measureCard(card) {
+    if (!card || this.host.clientWidth < 560) return null;
+    this.measureHud.style.maxWidth = Math.min(card.width || 440, this.host.clientWidth * .55) + "px"; this.measureHud.innerHTML = this.cardHtml(card);
+    return { w: this.measureHud.offsetWidth, h: this.measureHud.offsetHeight, corner: card.corner };
+  }
+  showCard(card, plan, delay) {
+    const html = this.cardHtml(card), key = JSON.stringify(card || null), place = () => {
+      if (!card || !plan.corner || this.host.clientWidth < 560) { this.hud.classList.add("hidden"); return; }
+      const c = plan.corner; Object.assign(this.hud.style, { left: c[1] === "l" ? "12px" : "auto", right: c[1] === "r" ? "12px" : "auto", top: c[0] === "t" ? "12px" : "auto", bottom: c[0] === "b" ? "12px" : "auto", maxWidth: Math.min(card.width || 440, this.host.clientWidth * .55) + "px" });
+    };
+    clearTimeout(this.cardTimer);
+    if (key === this.cardKey) { place(); if (card) this.hud.classList.remove("hidden"); return; }
+    this.cardKey = key; this.hud.classList.add("hidden");
+    this.cardTimer = setTimeout(() => { this.hud.innerHTML = html; place(); if (card && plan.corner) requestAnimationFrame(() => this.hud.classList.remove("hidden")); }, delay);
+  }
+  /* ---------- transitions ---------- */
+  goTo(scene, { instant = false } = {}) {
+    this.finish(true); this.clearPackets(); this.flows = []; this.view = null; this.host.classList.remove("zoomed");
+    const now = performance.now(), lay = this.layout(scene), card = this.measureCard(scene.card), plan = this.planCam(lay, card);
+    this.scene = scene; this.lay = lay; this.plan = plan; this.corner = plan.corner;
+    const target = lay.ents, gone = [...this.ents.keys()].filter(id => !target[id]), changed = Object.keys(target).filter(id => this.ents.has(id) && JSON.stringify(this.ents.get(id).to || this.ents.get(id).cur) !== JSON.stringify(target[id]));
+    const added = Object.keys(target).filter(id => !this.ents.has(id)).sort((a, b) => depthOf(target[a]) - depthOf(target[b]));
+    const EXIT = 420, MOVE = 820, ENTER = 680, STAG = 120, moveDelay = gone.length ? EXIT * .5 : 0, enterBase = changed.length ? moveDelay + MOVE * .7 : gone.length ? EXIT * .7 : 0;
+    let end = 0; const ready = {};
+    for (const id of gone) { const r = this.ents.get(id); r.tw = { from: { ...r.cur }, to: { ...r.cur, opacity: 0, lift: (r.cur.lift || 0) - 20 }, start: now, delay: 0, dur: EXIT, ease: EASE.inOut, remove: true }; end = Math.max(end, EXIT); }
+    for (const id of Object.keys(target)) {
+      if (!this.ents.has(id)) continue; const r = this.ents.get(id);
+      if (changed.includes(id)) { r.tw = { from: { ...r.cur }, to: target[id], start: now, delay: moveDelay, dur: MOVE, ease: EASE.inOut }; ready[id] = moveDelay + MOVE * .8; end = Math.max(end, moveDelay + MOVE); }
+      else { r.to = target[id]; ready[id] = 0; }
+    }
+    added.forEach((id, i) => {
+      const t = target[id], from = { ...t, opacity: 0, lift: t.type === "users" || t.type === "crowd" ? 26 : t.type === "zone" || t.type === "note" ? 0 : 110 };
+      if (t.type === "users" || t.type === "crowd") from.count = 0; if (t.type === "queue") from.n = 0;
+      const r = this.addEnt(id, from), delay = enterBase + i * STAG;
+      r.tw = { from, to: t, start: now, delay, dur: ENTER, ease: EASE.out, liftEase: EASE.back }; ready[id] = delay + ENTER * .75; end = Math.max(end, delay + ENTER);
+    });
+    for (const [id, l] of this.links) if (!scene.links?.[id]) { l.tw = { key: "alpha", from: l.alpha, to: 0, start: now, delay: 0, dur: 300, remove: true }; }
+    let k = 0;
+    for (const [id, spec] of Object.entries(scene.links || {})) {
+      if (this.links.has(id)) { const l = this.links.get(id); l.spec = spec; l.labelPick = lay.labels[id]; this.styleLink(l); if (l.tw?.remove) { l.tw = { key: "alpha", from: l.alpha, to: 1, start: now, delay: 0, dur: 300 }; } continue; }
+      const l = this.addLink(id, spec); l.labelPick = lay.labels[id]; l.draw = 0;
+      const delay = Math.max(ready[spec.from] ?? 0, ready[spec.to] ?? 0, changed.length ? moveDelay + MOVE * .6 : 0) + 60 + k++ * 90;
+      l.tw = { key: "draw", from: 0, to: 1, start: now, delay, dur: 560 }; end = Math.max(end, delay + 560);
+    }
+    const camDelay = gone.length ? EXIT * .4 : 0; end = Math.max(end, camDelay + MOVE);
+    this.anim = { start: now, end: now + end, cam: { from: { ...this.cam }, to: plan.cam, delay: camDelay, dur: MOVE }, flows: scene.flows || [], spot: [...added, ...changed] };
+    this.showCard(scene.card, plan, instant ? 0 : Math.min(end, 650));
+    if (instant) this.finish();
+  }
+  finish(silent = false) {
+    if (!this.anim) return;
+    for (const [id, r] of [...this.ents]) if (r.tw) { if (r.tw.remove) this.removeEnt(id); else { r.cur = r.tw.to; r.to = r.tw.to; r.tw = null; this.renderEnt(r); } }
+    for (const [id, l] of [...this.links]) if (l.tw) { if (l.tw.remove) { l.el.remove(); l.label.remove(); this.links.delete(id); } else { l[l.tw.key] = l.tw.to; l.tw = null; } }
+    this.cam = this.anim.cam.to; this.applyCam(); this.sortDepth(); this.updateLinks();
+    const a = this.anim; this.anim = null;
+    if (!silent) { this.flows = a.flows.map(f => ({ ...f, acc: .6, n: 0, rr: 0 })); for (const id of a.spot) this.spotlight(id); }
+  }
+  refit() {
+    if (!this.scene) return;
+    const card = this.measureCard(this.scene.card); this.plan = this.planCam(this.lay, card); this.corner = this.plan.corner; this.view = null; this.host.classList.remove("zoomed");
+    if (this.anim) this.anim.cam.to = this.plan.cam; else { this.cam = this.plan.cam; this.applyCam(); }
+    this.cardKey = null; this.showCard(this.scene.card, this.plan, 0);
+  }
+  /* ---------- entities & links ---------- */
+  addEnt(id, props) {
+    const NS = "http://www.w3.org/2000/svg", el = document.createElementNS(NS, "g"), over = document.createElementNS(NS, "g");
+    (FLOOR_TYPES.has(props.type) ? this.Lr.floor : this.Lr.ents).appendChild(el); this.Lr.over.appendChild(over);
+    const r = { id, cur: { ...props }, el, over, geo: null, tw: null }; this.ents.set(id, r); this.renderEnt(r); return r;
+  }
+  removeEnt(id) { const r = this.ents.get(id); r.el.remove(); r.over.remove(); this.ents.delete(id); }
+  renderEnt(r) { const g = (R[r.cur.type] || R.service)(r.cur); r.el.innerHTML = g.body; r.over.innerHTML = g.over; r.geo = g; }
+  sortDepth() { const list = [...this.ents.values()].filter(r => !FLOOR_TYPES.has(r.cur.type)).sort((a, b) => depthOf(a.cur) - depthOf(b.cur)); for (const r of list) this.Lr.ents.appendChild(r.el); }
+  spotlight(id) {
+    const r = this.ents.get(id); if (!r || !r.geo?.poly || ["zone", "note", "queue"].includes(r.cur.type)) return;
+    const e = r.cur, s = (e.s || (e.r ? e.r * 2 : 4)) / 2 + .7, el = document.createElementNS("http://www.w3.org/2000/svg", "path");
+    el.setAttribute("class", "spot"); el.setAttribute("d", roundPoly([P(e.x - s, e.y + s), P(e.x + s, e.y + s), P(e.x + s, e.y - s), P(e.x - s, e.y - s)], 8));
+    this.Lr.floor.appendChild(el); setTimeout(() => el.remove(), 1700);
+  }
+  addLink(id, spec) {
+    const NS = "http://www.w3.org/2000/svg", el = document.createElementNS(NS, "path"), label = document.createElementNS(NS, "g");
+    this.Lr.links.appendChild(el); this.Lr.over.appendChild(label);
+    const l = { id, spec, el, label, draw: 1, alpha: 1, tw: null, pts: null, lens: null, labelKey: null }; this.links.set(id, l); this.styleLink(l); return l;
+  }
+  styleLink(l) { l.el.setAttribute("class", `link link--${l.spec.style || "solid"}`); }
+  updateLinks() {
+    const ents = {}, geo = {}; for (const [id, r] of this.ents) { ents[id] = r.cur; geo[id] = r.geo; }
+    for (const l of this.links.values()) {
+      const s = l.spec, pts = this.linkPoints(s, ents, geo); if (!pts) { l.el.setAttribute("d", ""); l.label.innerHTML = ""; continue; }
+      l.pts = pts; l.lens = polyLen(pts); l.el.setAttribute("d", roundLine(pts, 9));
+      const style = s.style || "solid", mk = style === "off" ? "url(#arrow-off)" : style === "hot" ? "url(#arrow-hot)" : style === "good" ? "url(#arrow-good)" : "url(#arrow)", show = l.draw > .97;
+      const heads = s.heads || "end";
+      l.el.setAttribute("marker-end", show && heads !== "none" && heads !== "start" ? mk : ""); l.el.setAttribute("marker-start", show && (heads === "both" || heads === "start") ? mk : "");
+      if (l.draw < 1) { const len = l.lens.tot; l.el.style.strokeDasharray = `${r2(len)} ${r2(len)}`; l.el.style.strokeDashoffset = r2(len * (1 - l.draw)); }
+      else { l.el.style.strokeDasharray = ""; l.el.style.strokeDashoffset = ""; }
+      l.el.style.opacity = r2(l.alpha);
+      if (s.label) {
+        const key = `${s.label}|${s.labelTone || ""}|${s.icon || ""}`; if (l.labelKey !== key) { l.label.innerHTML = pill(0, 0, s.label, { tone: s.labelTone || "paper", icon: s.icon }); l.labelKey = key; }
+        const pick = l.labelPick || { t: s.labelAt ?? .5, side: 1 }, { cx, cy } = this.labelPos(pts, l.lens, pick, pillSize(s.label, s.icon));
+        l.label.setAttribute("transform", `translate(${r2(cx)} ${r2(cy)})`); l.label.style.opacity = r2(clamp01((l.draw - .6) / .4) * l.alpha);
+      } else if (l.labelKey !== null) { l.label.innerHTML = ""; l.labelKey = null; }
+    }
+  }
+  /* ---------- packets ---------- */
+  clearPackets() { for (const p of this.packets) { p.el.classList.add("leave"); setTimeout(() => p.el.remove(), 260); } this.packets = []; }
+  spawn(f) {
+    const kindOf = () => f.pattern ? f.pattern[f.n % f.pattern.length] : f.kind || "req";
+    if (f.fanout && f.routes) { for (const r of f.routes) this.launch(r.route || r.path, r.kind || kindOf(), f); f.n++; return; }
+    if (f.routes) {
+      let i; if (f.pick === "weights") { const w = f.routes.map(r => r.weight ?? 1), tot = w.reduce((a, b) => a + b, 0); let x = Math.random() * tot; i = w.findIndex(v => (x -= v) <= 0); if (i < 0) i = w.length - 1; } else i = f.rr++ % f.routes.length;
+      const r = f.routes[i]; this.launch(r.route || r.path, r.kind || kindOf(), f); f.n++; return;
+    }
+    this.launch(f.route, kindOf(), f); f.n++;
+  }
+  launch(route, kind, f) {
+    if (!route || !route.every(id => this.links.has(id) && this.links.get(id).pts)) return;
+    const el = document.createElementNS("http://www.w3.org/2000/svg", "g"); el.setAttribute("class", `pkt pkt--${kind}`);
+    el.innerHTML = kind === "heavy" ? `<rect x="-6" y="-6" width="12" height="12" rx="3.5"/>` : kind === "write" ? `<rect x="-4.2" y="-4.2" width="8.4" height="8.4" rx="2"/>` : kind === "msg" ? `<rect x="-4.8" y="-4.8" width="9.6" height="9.6" rx="2.4"/>` : kind === "ping" ? `<circle r="3.6"/>` : `<circle r="4.3"/>`;
+    el.style.opacity = 0; this.Lr.pkts.appendChild(el);
+    this.packets.push({ route, seg: 0, d: 0, kind, el, back: false, bounce: !!f.bounce, dwell: 0, hold: f.hold || 0, speed: f.speed || 1, born: true });
+  }
+  burst(x, y, kind) { const g = document.createElementNS("http://www.w3.org/2000/svg", "g"); g.setAttribute("class", `fx--${kind}`); g.setAttribute("transform", `translate(${r2(x)} ${r2(y)})`); g.innerHTML = kind === "fail" ? `<circle r="5.2" class="fx-ring"/><path class="fx-x" d="M-3.4,-3.4 L3.4,3.4 M3.4,-3.4 L-3.4,3.4"/>` : `<circle r="4.3" class="fx-ring"/>`; this.Lr.pkts.appendChild(g); setTimeout(() => g.remove(), 700); }
+  stepPackets(dt) {
+    for (const f of this.flows) { f.acc += dt * (f.rate ?? 1); while (f.acc >= 1) { f.acc--; this.spawn(f); } }
+    const keep = [];
+    for (const p of this.packets) {
+      if (p.dwell > 0) { p.dwell -= dt; if (p.dwell > 0) { keep.push(p); continue; } p.el.style.opacity = 1; p.el.classList.remove("held"); if (p.back) p.el.classList.add("back"); }
+      const l = this.links.get(p.route[p.seg]); if (!l || !l.pts) { p.el.remove(); continue; }
+      p.d += PACKET_SPEED * p.speed * (KIND_SPEED[p.kind] || 1) * dt;
+      const heads = (l.spec.heads || "end"), a = heads === "both" || heads === "start" ? 14 : 0; let b = l.lens.tot - (heads === "none" || heads === "start" ? 0 : 14); let A = a; if (b - A < 10) { A = 0; b = l.lens.tot; }
+      const span = b - A;
+      if (p.d >= span) {
+        const endPt = pointAt(l.pts, p.back ? A : b, l.lens);
+        if (!p.back && (p.kind === "fail" || Math.random() < (l.spec.fail || 0))) { this.burst(endPt.x, endPt.y, "fail"); p.el.remove(); continue; }
+        if (!p.back && p.seg < p.route.length - 1) { p.seg++; p.d = 0; p.dwell = .12; p.el.style.opacity = 0; keep.push(p); continue; }
+        if (p.bounce && !p.back) { p.back = true; p.d = 0; if (p.hold) { p.dwell = p.hold; p.el.classList.add("held"); } else p.el.classList.add("back"); keep.push(p); continue; }
+        if (p.back && p.seg > 0) { p.seg--; p.d = 0; p.dwell = .12; p.el.style.opacity = 0; keep.push(p); continue; }
+        this.burst(endPt.x, endPt.y, "ok"); p.el.remove(); continue;
+      }
+      const pt = pointAt(l.pts, p.back ? b - p.d : A + p.d, l.lens); p.el.setAttribute("transform", `translate(${r2(pt.x)} ${r2(pt.y)})`);
+      if (p.born) { p.born = false; p.el.style.opacity = 1; }
+      keep.push(p);
+    }
+    this.packets = keep;
+  }
+  /* ---------- frame loop ---------- */
+  tick(now) {
+    const dt = Math.min(.05, (now - this.last) / 1000); this.last = now;
+    if (this.anim) {
+      const a = this.anim, c = a.cam, k = EASE.inOut(clamp01((now - a.start - c.delay) / c.dur));
+      this.cam = { x: lerp(c.from.x, c.to.x, k), y: lerp(c.from.y, c.to.y, k), w: lerp(c.from.w, c.to.w, k), h: lerp(c.from.h, c.to.h, k) }; this.applyCam();
+      let moved = false;
+      for (const [id, r] of [...this.ents]) {
+        const t = r.tw; if (!t) continue;
+        const raw = clamp01((now - t.start - t.delay) / t.dur); if (raw <= 0 && !t.started) { if (t.from.opacity === 0) { r.cur = t.from; this.renderEnt(r); t.started = true; } continue; }
+        t.started = true; const e = t.ease(raw), cur = {};
+        for (const key of new Set([...Object.keys(t.from), ...Object.keys(t.to)])) {
+          const a0 = t.from[key], b0 = t.to[key];
+          if (typeof a0 === "number" && typeof b0 === "number") cur[key] = key === "lift" && t.liftEase ? lerp(a0, b0, t.liftEase(raw)) : lerp(a0, b0, e);
+          else cur[key] = raw < .5 ? (a0 ?? b0) : (b0 ?? a0);
+        }
+        r.cur = cur; this.renderEnt(r); moved = true;
+        if (raw >= 1) { if (t.remove) this.removeEnt(id); else { r.cur = t.to; r.to = t.to; r.tw = null; this.renderEnt(r); } }
+      }
+      for (const [id, l] of [...this.links]) {
+        const t = l.tw; if (!t) continue; const raw = clamp01((now - t.start - t.delay) / t.dur);
+        l[t.key] = lerp(t.from, t.to, t.key === "draw" ? EASE.inOut(raw) : raw);
+        if (raw >= 1) { if (t.remove) { l.el.remove(); l.label.remove(); this.links.delete(id); } else l.tw = null; }
+      }
+      if (moved) this.sortDepth();
+      this.updateLinks();
+      if (now >= a.end) this.finish();
+    }
+    if (!this.paused) this.stepPackets(dt);
+  }
+  /* ---------- zoom & pan ---------- */
+  gestures() {
+    const h = this.host, rel = (x, y) => { const b = h.getBoundingClientRect(); return [(x - b.left) / b.width, (y - b.top) / b.height]; };
+    const zoomAt = (fx, fy, k) => { const c = this.displayCam(), wx = c.x + fx * c.w, wy = c.y + fy * c.h, nk = Math.max(1, Math.min(5, (this.view?.k || 1) * k)); if (nk <= 1.001) { this.view = null; h.classList.remove("zoomed"); this.applyCam(); return; } const w = this.cam.w / nk, hh = this.cam.h / nk; this.view = { k: nk, cx: wx - fx * w + w / 2, cy: wy - fy * hh + hh / 2 }; h.classList.add("zoomed"); this.applyCam(); };
+    h.addEventListener("wheel", e => { if (!(e.ctrlKey || e.metaKey)) return; e.preventDefault(); const [fx, fy] = rel(e.clientX, e.clientY); zoomAt(fx, fy, Math.exp(-e.deltaY * .01)); }, { passive: false });
+    h.addEventListener("dblclick", e => { const [fx, fy] = rel(e.clientX, e.clientY); if (this.view) { this.view = null; h.classList.remove("zoomed"); this.applyCam(); } else zoomAt(fx, fy, 2); });
+    let drag = null;
+    h.addEventListener("pointerdown", e => { if (!this.view || e.button !== 0) return; drag = { x: e.clientX, y: e.clientY }; h.setPointerCapture(e.pointerId); h.classList.add("dragging"); });
+    h.addEventListener("pointermove", e => { if (!drag || !this.view) return; const b = h.getBoundingClientRect(), c = this.displayCam(); this.view.cx -= (e.clientX - drag.x) / b.width * c.w; this.view.cy -= (e.clientY - drag.y) / b.height * c.h; drag = { x: e.clientX, y: e.clientY }; this.applyCam(); });
+    const up = () => { drag = null; h.classList.remove("dragging"); }; h.addEventListener("pointerup", up); h.addEventListener("pointercancel", up);
+  }
+  fit() { this.view = null; this.host.classList.remove("zoomed"); this.applyCam(); }
+  clear() { this.finish(true); for (const r of this.ents.values()) { r.el.remove(); r.over.remove(); } for (const l of this.links.values()) { l.el.remove(); l.label.remove(); } this.ents.clear(); this.links.clear(); this.clearPackets(); this.flows = []; this.cardKey = null; this.hud.classList.add("hidden"); }
+}
+
+/* ============================== metrics ============================== */
+function fmtMetric(def, v) {
+  if (v === null || v === undefined || v === "") return "—";
+  if (typeof v !== "number") return String(v);
+  const f = def.format || "num", compact = n => Math.abs(n) >= 1e9 ? r2(n / 1e9) + "B" : Math.abs(n) >= 1e6 ? r2(n / 1e6) + "M" : Math.abs(n) >= 1e4 ? Math.round(n / 1e3) + "k" : Math.abs(n) >= 1e3 ? (Math.round(n / 100) / 10) + "k" : String(Math.round(n * 10) / 10);
+  let s;
+  switch (f) {
+    case "ms": s = v < 1000 ? `${Math.round(v)} ms` : `${String(Math.round(v / 100) / 10).replace(/\.0$/, "")} s`; break;
+    case "s": s = v < 60 ? `${Math.round(v * 10) / 10} s` : v < 3600 ? `${Math.round(v / 6) / 10} min` : `${Math.round(v / 360) / 10} h`; break;
+    case "%": s = `${Math.round(v)}%`; break;
+    case "x": s = `${Math.round(v * 10) / 10}×`; break;
+    case "$": s = `$${compact(v)}`; break;
+    case "bytes": s = v >= 1 << 30 ? `${r2(v / (1 << 30))} GB` : v >= 1 << 20 ? `${r2(v / (1 << 20))} MB` : v >= 1024 ? `${Math.round(v / 1024)} KB` : `${v} B`; break;
+    default: s = compact(v);
+  }
+  return s + (def.unit ? ` ${def.unit}` : "");
+}
+function testCond(c, v) { const m = /^\s*(<=|>=|<|>|==|=|!=)\s*(-?[\d.]+)\s*$/.exec(String(c)); if (!m) return false; const n = parseFloat(m[2]); return { "<=": v <= n, ">=": v >= n, "<": v < n, ">": v > n, "==": v === n, "=": v === n, "!=": v !== n }[m[1]]; }
+function levelOf(def, raw) {
+  if (raw && typeof raw === "object") return raw.level || "none";
+  if (raw === null || raw === undefined) return "empty";
+  if (typeof raw === "number") { if (def.good && testCond(def.good, raw)) return "good"; if (def.warn && testCond(def.warn, raw)) return "warn"; if (def.good || def.warn) return "bad"; return "none"; }
+  if (def.levels && def.levels[raw]) return def.levels[raw];
+  return "none";
+}
+const metricVal = raw => raw && typeof raw === "object" ? raw.value : raw;
+
+
+/* ============================== layout lint (?lint) ============================== */
+function satOverlap(A, B) {
+  let depth = Infinity;
+  for (const poly of [A, B]) for (let i = 0; i < poly.length; i++) {
+    const [x1, y1] = poly[i], [x2, y2] = poly[(i + 1) % poly.length], nx = y1 - y2, ny = x2 - x1, len = Math.hypot(nx, ny); if (len < 1e-6) continue;
+    const proj = P2 => { let lo = Infinity, hi = -Infinity; for (const [x, y] of P2) { const v = (x * nx + y * ny) / len; lo = Math.min(lo, v); hi = Math.max(hi, v); } return [lo, hi]; };
+    const [a0, a1] = proj(A), [b0, b1] = proj(B), o = Math.min(a1, b1) - Math.max(a0, b0); if (o <= 0) return 0; depth = Math.min(depth, o);
+  }
+  return depth;
+}
+const rectPoly = r => [[r[0], r[1]], [r[2], r[1]], [r[2], r[3]], [r[0], r[3]]];
+function lintDeck() {
+  const S = Object.create(Stage.prototype), issues = [];
+  for (const l of deck.lessons) l.steps.forEach((s, si) => {
+    const lay = S.layout(s.scene || {}), items = [], where = `${l.id} step ${si + 1}`;
+    for (const [id, g] of Object.entries(lay.geo)) {
+      if (lay.ents[id].type === "zone") { g.rects.forEach(r => items.push({ owner: id, what: `"${id}" label`, poly: rectPoly(r) })); continue; }
+      if (g.poly) items.push({ owner: id, what: `"${id}"`, poly: g.poly, body: true });
+      g.rects.slice(g.poly ? 1 : 0).forEach((r, k) => items.push({ owner: id, what: `"${id}" ${k === 0 && (lay.ents[id].label && !["service", "block"].includes(lay.ents[id].type)) ? "label" : "tag"}`, poly: rectPoly(r) }));
+    }
+    for (const [id, r] of Object.entries(lay.labelRects)) { const lk = s.scene.links[id]; items.push({ owner: `link:${id}`, near: [lk.from, lk.to], what: `link "${id}" label`, poly: rectPoly(r) }); }
+    for (let i = 0; i < items.length; i++) for (let j = i + 1; j < items.length; j++) {
+      const a = items[i], b = items[j]; if (a.owner === b.owner) continue;
+      const d = satOverlap(a.poly, b.poly); if (d > 3) issues.push({ where, kind: "overlap", msg: `${a.what} overlaps ${b.what} (${Math.round(d)}px)` });
+    }
+    for (const [id, pts] of Object.entries(lay.linkPts)) {
+      const lk = s.scene.links[id], lens = polyLen(pts);
+      for (const [eid, g] of Object.entries(lay.geo)) {
+        if (!g.poly || eid === lk.from || eid === lk.to || lay.ents[eid].type === "zone") continue;
+        let inside = 0; for (let d = 0; d <= lens.tot; d += 4) { const p = pointAt(pts, d, lens); if (inConvex([p.x, p.y], g.poly)) inside++; }
+        if (inside >= 3) issues.push({ where, kind: "crossing", msg: `link "${id}" (${lk.from} → ${lk.to}) passes through "${eid}" — add via points or move "${eid}"` });
+      }
+    }
+    const rs = lay.rects; if (rs.length) {
+      const w = Math.max(...rs.map(r => r[2])) - Math.min(...rs.map(r => r[0])), h = Math.max(...rs.map(r => r[3])) - Math.min(...rs.map(r => r[1])), sc = Math.min(1.6, 1060 / w, 520 / h);
+      if (sc < .75) issues.push({ where, kind: "scale", msg: `diagram is ${Math.round(w)}×${Math.round(h)} units and will render at ${Math.round(sc * 100)}% on a laptop — tighten coordinates or drop entities` });
+    }
+  });
+  return issues;
+}
+
+/* ============================== app ============================== */
+const deck = (() => {
+  const d = DECK || { title: "Empty deck", sections: [] };
+  const sections = d.sections || [{ title: d.sectionTitle || d.title || "", lessons: d.lessons || [] }];
+  const lessons = []; sections.forEach((s, si) => { s.num = s.num ?? String(si + 1).padStart(2, "0"); (s.lessons || []).forEach((l, li) => { l.section = s; l.index = li + 1; l.of = s.lessons.length; lessons.push(l); }); });
+  return { ...d, sections, lessons };
+})();
+const STORE = `fw:${deck.id || deck.title || "deck"}`;
+const store = { get: (k, d) => { try { return JSON.parse(localStorage.getItem(`${STORE}:${k}`)) ?? d; } catch { return d; } }, set: (k, v) => { try { localStorage.setItem(`${STORE}:${k}`, JSON.stringify(v)); } catch { } } };
+const CH_TONE = { setup: "sand", context: "sand", problem: "red", solution: "green", technique: "blue", tradeoff: "amber", insight: "violet", decision: "violet", demo: "teal", result: "green", recap: "ink" };
+const CALLOUT_ICON = { warn: "alert", tip: "bulb", insight: "sparkles", decision: "flag", next: "arrowRight", info: "info" };
+const LEVEL_TONE = { beginner: "green", intermediate: "green", advanced: "red" };
+const FOLDER = { sand: "#d9b98a", green: "#7fc278", violet: "#9c86d6", orange: "#e8834d", blue: "#5b9bd5", teal: "#2a9d8f", rose: "#d9577a", olive: "#9aa64a", slate: "#64728a", amber: "#e3ae3c", red: "#e5534b" };
+const FOLDER_ORDER = ["sand", "green", "violet", "orange", "blue", "teal", "rose", "olive", "slate"];
+const html = document.documentElement;
+let stage, cur = { lesson: null, step: 0 }, done = new Set(store.get("done", []));
+
+if (store.get("theme", deck.theme || "light") === "dark" || /[?&]dark\b/.test(location.search)) html.dataset.theme = "dark";
+if (store.get("presenter", false)) html.classList.add("presenter");
+if (deck.lessons.length <= 1) html.classList.add("no-sidebar");
+
+function topbar() {
+  const t = deck.title || "Walkthrough", words = t.split(" "), last = words.pop();
+  $("#topbar").innerHTML = `<a class="brand" href="#/"><span class="brand-mark">${icon(deck.icon || "workflow", 18, 2)}</span><span>${esc(words.join(" "))}${words.length ? " " : ""}<em>${esc(last)}</em></span></a>
+    <span class="sub">${esc(deck.subtitle || "")}</span><span class="spacer"></span>
+    ${deck.author ? `<span class="sub">${esc(deck.author)}</span>` : ""}
+    <button class="tbtn" id="b-present" title="P">${icon("expand", 15)}${esc(L.present)}</button>
+    <button class="tbtn icon" id="b-theme" title="T">${icon(html.dataset.theme === "dark" ? "sun" : "moon", 16)}</button>`;
+  $("#b-present").onclick = togglePresenter; $("#b-theme").onclick = toggleTheme;
+}
+function $(s, r = document) { return r.querySelector(s); }
+function toggleTheme() { const dark = html.dataset.theme !== "dark"; if (dark) html.dataset.theme = "dark"; else delete html.dataset.theme; store.set("theme", dark ? "dark" : "light"); topbar(); }
+function togglePresenter() { html.classList.toggle("presenter"); store.set("presenter", html.classList.contains("presenter")); if (html.classList.contains("presenter") && document.fullscreenEnabled && !document.fullscreenElement) document.documentElement.requestFullscreen?.().catch(() => { }); else if (!html.classList.contains("presenter") && document.fullscreenElement) document.exitFullscreen?.(); }
+
+function sidebarHtml() {
+  const total = deck.lessons.length, nDone = deck.lessons.filter(l => done.has(l.id)).length;
+  return `<aside class="sidebar"><div class="course"><div class="course-head">${esc(deck.courseLabel || L.overview)}<span>${total} ${esc(L.lessons)}</span></div>
+    ${deck.sections.map((s, i) => `<div class="sec ${s.lessons.includes(cur.lesson) ? "" : "closed"}"><div class="sec-title"><span class="folder" style="background:${FOLDER[s.color] || FOLDER[FOLDER_ORDER[i % FOLDER_ORDER.length]]}"></span>${esc(s.num)}. ${esc(s.title)}<span class="count">${s.lessons.filter(l => done.has(l.id)).length}/${s.lessons.length}</span></div>
+      <ul class="sec-lessons">${s.lessons.map(l => `<li><a href="#/${esc(l.id)}/1" class="${l === cur.lesson ? "active" : ""}">${icon("file", 13)}<span>${esc(l.title)}</span>${done.has(l.id) ? `<span class="done">${icon("check", 13, 2.4)}</span>` : ""}</a></li>`).join("")}</ul></div>`).join("")}
+  </div><div class="progress"><span>${esc(L.progress)}</span><span>${nDone} / ${total}</span></div></aside>`;
+}
+
+function renderOverview() {
+  cur.lesson = null; stage = null;
+  $("#body").innerHTML = `<div class="overview"><div class="ov-hero"><h1>${esc(deck.title || "")}</h1><p>${deck.summary || deck.subtitle || ""}</p>${deck.lessons[0] ? `<a class="btn primary" style="display:inline-flex;width:auto;gap:30px" href="#/${esc(deck.lessons[0].id)}/1"><span>${esc(L.start)}</span>${icon("arrowRight", 16, 2)}</a>` : ""}</div>
+  ${deck.sections.map((s, i) => `<section class="ov-sec"><h2><span class="folder" style="background:${FOLDER[s.color] || FOLDER[FOLDER_ORDER[i % FOLDER_ORDER.length]]}"></span>${esc(s.num)}. ${esc(s.title)}</h2><div class="ov-grid">${s.lessons.map(l => `<a class="ov-card" href="#/${esc(l.id)}/1"><h3>${esc(l.title)}</h3><p>${l.summary || ""}</p><div class="badges">${badges(l)}</div></a>`).join("")}</div></section>`).join("")}</div>`;
+}
+function badges(l) {
+  return `${l.minutes ? `<span class="badge t-amber">${icon("clock", 13)}${l.minutes} ${esc(L.min)}</span>` : ""}${l.level ? `<span class="badge t-${LEVEL_TONE[l.level] || "green"}">${icon("signal", 13)}${esc(L.levels[l.level] || l.level)}</span>` : ""}<span class="badge t-violet">${icon("listOrdered", 13)}${l.steps.length} ${esc(L.steps)}</span>${l.illustrative ? `<span class="badge t-sand" title="${esc(L.illustrative)}">${icon("info", 13)}${esc(L.illustrative)}</span>` : ""}`;
+}
+
+function renderLesson(lesson) {
+  cur.lesson = lesson;
+  const metricKeys = Object.keys(lesson.metrics || {});
+  const legend = (lesson.legend || []).map(k => Array.isArray(k) ? k : [k, L.legend[k] || k]);
+  $("#body").innerHTML = `${deck.lessons.length > 1 ? sidebarHtml() : ""}
+  <main class="main">
+    <div class="lesson-head">
+      <div class="crumb">${lesson.section?.title ? `${esc(lesson.section.num)}. ${esc(lesson.section.title)}<span class="sep">/</span>${esc(L.lesson)} ${lesson.index} ${esc(L.of)} ${lesson.of}` : ""}</div>
+      <h1>${esc(lesson.title)}</h1><div class="badges">${badges(lesson)}</div>
+      <p class="summary">${lesson.summary || ""}</p>
+    </div>
+    <section class="stage-card">
+      <div class="stage-top"><div class="metrics" id="metrics">${metricKeys.map(k => { const d = lesson.metrics[k]; return `<div class="metric lvl-empty" data-k="${esc(k)}"><div class="m-label">${icon(d.icon, 12, 2)}${esc(d.label || k)}</div><div class="m-val">—</div></div>`; }).join("")}</div>
+        <div class="controls"><button class="tbtn" id="b-fit" style="display:none">${icon("zoomOut", 15)}${esc(L.fit)}</button><button class="tbtn" id="b-replay" title="R">${icon("replay", 15)}${esc(L.replay)}</button><button class="tbtn" id="b-pause" title="Space">${icon("pause", 15)}<span>${esc(L.pause)}</span></button></div></div>
+      <div class="stage" id="stage"><div class="hud hidden" id="hud"></div><div class="hud measure" id="hud-measure"></div></div>
+      ${legend.length ? `<div class="legend">${legend.map(([k, lab]) => `<span><i class="lg ${esc(k)}"></i>${esc(lab)}</span>`).join("")}</div>` : ""}
+    </section>
+    <section class="timeline"><div class="tl-head"><span>${esc(L.inThisLesson)}</span><span id="tl-count"></span></div>
+      <div class="tl" id="tl">${lesson.steps.map((s, i) => `<button class="tl-step" data-i="${i}"><span class="tl-dot">${i + 1}</span><span class="tl-label">${esc(s.short || s.title)}</span></button>`).join("")}</div></section>
+  </main>
+  <aside class="side">
+    <section class="step-card"><div class="step-scroll" id="step"></div>
+      <div class="nav"><button class="btn" id="b-back">${icon("arrowLeft", 16, 2)}${esc(L.back)}</button><button class="btn primary" id="b-next"><span></span>${icon("arrowRight", 16, 2)}</button></div>
+      <div class="keys"><kbd>←</kbd> <kbd>→</kbd> ${esc(L.keys)} · <kbd>R</kbd> ${esc(L.keyReplay)} · <kbd>Space</kbd> ${esc(L.keyPause)}</div></section>
+    ${(lesson.goals || []).length ? `<section class="goals-card"><h3>${esc(L.youllLearn)}</h3><ul class="goals" id="goals">${lesson.goals.map((g, i) => `<li data-step="${(g.step || 1) - 1}"><span class="box">✓</span><span>${g.text}</span></li>`).join("")}</ul></section>` : ""}
+  </aside>`;
+  stage = new Stage($("#stage"), $("#hud"), $("#hud-measure"));
+  stage.host.addEventListener("dblclick", () => setTimeout(() => $("#b-fit").style.display = stage.view ? "" : "none"));
+  $("#b-fit").onclick = () => { stage.fit(); $("#b-fit").style.display = "none"; };
+  $("#b-replay").onclick = replay; $("#b-pause").onclick = togglePause;
+  $("#b-back").onclick = () => go(cur.step - 1);
+  $("#b-next").onclick = () => cur.step < lesson.steps.length - 1 ? go(cur.step + 1) : nextLesson();
+  $("#tl").onclick = e => { const b = e.target.closest(".tl-step"); if (b) go(+b.dataset.i); };
+  $("#goals") && ($("#goals").onclick = e => { const li = e.target.closest("li"); if (li) go(+li.dataset.step); });
+  document.querySelectorAll(".sec-title").forEach(t => t.onclick = () => t.parentElement.classList.toggle("closed"));
+  setPaused(false); cur.step = -1;
+}
+function nextLesson() {
+  const i = deck.lessons.indexOf(cur.lesson), n = deck.lessons[i + 1];
+  if (n) location.hash = `#/${n.id}/1`; else location.hash = deck.lessons.length > 1 ? "#/" : `#/${cur.lesson.id}/1`;
+}
+function go(i) { const l = cur.lesson; if (!l) return; i = Math.max(0, Math.min(l.steps.length - 1, i)); location.hash = `#/${l.id}/${i + 1}`; }
+function showStep(i, { instant = false } = {}) {
+  const l = cur.lesson, s = l.steps[i], prev = cur.step; cur.step = i;
+  const tone = CH_TONE[s.chapter] || "sand", ch = L.chapters[s.chapter] || s.chapter || "";
+  const changes = (s.changes || []).map(c => { const m = /^\s*([+~\-−])\s*/.exec(c), k = m ? { "+": "add", "~": "mod", "-": "del", "−": "del" }[m[1]] : "mod", sym = { add: "+", mod: "~", del: "−" }[k]; return `<li><span class="mk ${k}">${sym}</span><span>${m ? c.slice(m[0].length) : c}</span></li>`; }).join("");
+  $("#step").innerHTML = `<div class="step-meta"><span>${esc(L.step.toUpperCase())} ${i + 1} / ${l.steps.length}</span>${ch ? `<span class="chip t-${tone}">${esc(ch)}</span>` : ""}</div>
+    <h2>${esc(s.title)}</h2><div class="step-body">${(s.body || []).map(p => /^\s*<(ul|ol|table|div|p)\b/i.test(p) ? p : `<p>${p}</p>`).join("")}</div>
+    ${s.callout ? `<div class="callout k-${esc(s.callout.kind || "info")}"><div class="c-ico">${icon(s.callout.icon || CALLOUT_ICON[s.callout.kind] || "info", 15, 2)}</div><div><div class="c-label">${esc(s.callout.label || L.callouts[s.callout.kind] || "")}</div><div class="c-text">${s.callout.text}</div></div></div>` : ""}
+    ${changes ? `<div class="changes-title">${esc(L.whatChanged)}</div><ul class="changes">${changes}</ul>` : ""}`;
+  $("#step").scrollTop = 0;
+  $("#b-back").disabled = i === 0;
+  const last = i === l.steps.length - 1, nl = deck.lessons[deck.lessons.indexOf(l) + 1];
+  $("#b-next span").textContent = last ? (nl ? `${L.nextLesson}: ${nl.title}` : L.finish) : `${L.next}: ${l.steps[i + 1].short || l.steps[i + 1].title}`;
+  if (last && !done.has(l.id)) { done.add(l.id); store.set("done", [...done]); const p = document.querySelector(".progress span:last-child"); if (p) p.textContent = `${deck.lessons.filter(x => done.has(x.id)).length} / ${deck.lessons.length}`; }
+  document.querySelectorAll(".tl-step").forEach((b, j) => { b.classList.toggle("done", j < i); b.classList.toggle("cur", j === i); });
+  $("#tl-count").textContent = `${L.step} ${i + 1} ${L.of} ${l.steps.length}`;
+  document.querySelectorAll("#goals li").forEach(li => li.classList.toggle("on", +li.dataset.step <= i));
+  updateMetrics(s, prev >= 0 ? l.steps[prev] : null, i > 0 ? l.steps[i - 1] : null, instant);
+  stage.goTo(s.scene || { entities: {}, links: {}, flows: [] }, { instant });
+}
+function updateMetrics(s, shownStep, prevStep, instant) {
+  const l = cur.lesson;
+  for (const el of document.querySelectorAll(".metric")) {
+    const k = el.dataset.k, def = l.metrics[k], raw = s.metrics?.[k], v = metricVal(raw), lvl = levelOf(def, raw), pv = shownStep ? metricVal(shownStep.metrics?.[k]) : null, dv = prevStep ? metricVal(prevStep.metrics?.[k]) : null;
+    el.className = `metric lvl-${lvl}`; const out = el.querySelector(".m-val");
+    const delta = typeof v === "number" && typeof dv === "number" && v !== dv ? `<span class="m-delta">${v > dv ? "▲" : "▼"}</span>` : "";
+    cancelAnimationFrame(el._raf);
+    if (typeof v === "number" && typeof pv === "number" && !instant && v !== pv) {
+      const t0 = performance.now(), D = 650, run = t => { const k2 = EASE.out(clamp01((t - t0) / D)); out.innerHTML = esc(fmtMetric(def, lerp(pv, v, k2))) + delta; if (k2 < 1) el._raf = requestAnimationFrame(run); }; el._raf = requestAnimationFrame(run);
+    } else out.innerHTML = esc(fmtMetric(def, v)) + delta;
+  }
+}
+function replay() {
+  const l = cur.lesson; if (!l) return; const i = cur.step;
+  if (i > 0) stage.goTo(l.steps[i - 1].scene, { instant: true }); else stage.clear();
+  stage.goTo(l.steps[i].scene);
+}
+function setPaused(p) { if (!stage) return; stage.paused = p; html.classList.toggle("paused", p); const b = $("#b-pause"); if (b) b.innerHTML = `${icon(p ? "play" : "pause", 15)}<span>${esc(p ? L.play : L.pause)}</span>`; }
+function togglePause() { setPaused(!stage.paused); }
+
+function route() {
+  const m = /^#\/([^/]+)(?:\/(\d+))?/.exec(location.hash);
+  if (!m) { if (deck.lessons.length === 1) { location.replace(`#/${deck.lessons[0].id}/1`); return; } renderOverview(); return; }
+  const lesson = deck.lessons.find(l => l.id === decodeURIComponent(m[1]));
+  if (!lesson) { location.replace("#/"); return; }
+  const step = Math.max(0, Math.min(lesson.steps.length - 1, (parseInt(m[2] || "1", 10) || 1) - 1));
+  const first = cur.lesson !== lesson || !stage;
+  if (first) renderLesson(lesson);
+  if (first || step !== cur.step) {
+    if (first && step > 0 && !/[?&]shot\b/.test(location.search)) { stage.goTo(lesson.steps[step - 1].scene, { instant: true }); cur.step = step - 1; }
+    showStep(step, { instant: /[?&]shot\b/.test(location.search) });
+  }
+}
+document.addEventListener("keydown", e => {
+  if (e.metaKey || e.ctrlKey || e.altKey || /input|textarea/i.test(e.target.tagName)) return;
+  const k = e.key;
+  if (k === "t" || k === "T") return toggleTheme();
+  if (k === "p" || k === "P") return togglePresenter();
+  if (!cur.lesson) { if (k === "ArrowRight" || k === "Enter") location.hash = `#/${deck.lessons[0].id}/1`; return; }
+  if (k === "ArrowRight" || k === "PageDown" || k === "j") { e.preventDefault(); cur.step < cur.lesson.steps.length - 1 ? go(cur.step + 1) : nextLesson(); }
+  else if (k === "ArrowLeft" || k === "PageUp" || k === "k") { e.preventDefault(); go(cur.step - 1); }
+  else if (k === "Home") go(0); else if (k === "End") go(cur.lesson.steps.length - 1);
+  else if (k === " ") { e.preventDefault(); togglePause(); }
+  else if (k === "r" || k === "R") replay();
+  else if (k === "f" || k === "F") stage?.fit();
+  else if (k === "Escape" && html.classList.contains("presenter")) togglePresenter();
+  else if (/^[1-9]$/.test(k)) go(+k - 1);
+});
+window.addEventListener("hashchange", route);
+document.title = deck.title || "Walkthrough";
+topbar();
+{ let started = false; const start = () => { if (!started) { started = true; route(); } }; (document.fonts?.ready || Promise.resolve()).then(start); setTimeout(start, 700); }
+</script>
+</body>
+</html>

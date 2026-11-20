@@ -1,0 +1,1000 @@
+{
+  "title": "Photo Uploads",
+  "subtitle": "Feature walkthrough · Media team",
+  "lang": "en",
+  "icon": "package",
+  "sections": [
+    {
+      "title": "Media",
+      "color": "orange",
+      "lessons": [
+        {
+          "id": "direct-uploads",
+          "title": "Direct-to-Storage Uploads",
+          "summary": "How photo uploads stopped melting the API: presigned URLs, async thumbnails, retries and a CDN.",
+          "minutes": 8,
+          "level": "intermediate",
+          "illustrative": true,
+          "metrics": {
+            "p99": {
+              "label": "Upload p99",
+              "icon": "timer",
+              "format": "ms",
+              "good": "<=1500",
+              "warn": "<=4000"
+            },
+            "ok": {
+              "label": "Uploads OK",
+              "icon": "check",
+              "format": "%",
+              "good": ">=99",
+              "warn": ">=95"
+            },
+            "cpu": {
+              "label": "API CPU",
+              "icon": "cpu",
+              "format": "%",
+              "good": "<=60",
+              "warn": "<=80"
+            },
+            "lag": {
+              "label": "Thumbnail ready",
+              "icon": "image",
+              "format": "text"
+            }
+          },
+          "legend": [
+            "req",
+            "res",
+            "heavy",
+            "msg",
+            "retry",
+            "fail"
+          ],
+          "goals": [
+            {
+              "text": "Why proxying bytes through the API hurts",
+              "step": 1
+            },
+            {
+              "text": "Presigned URLs: upload straight to storage",
+              "step": 2
+            },
+            {
+              "text": "Async thumbnails with a queue",
+              "step": 4
+            },
+            {
+              "text": "Retries, backoff and a dead-letter queue",
+              "step": 6
+            },
+            {
+              "text": "Serving through a CDN, and the trade-off",
+              "step": 7
+            }
+          ],
+          "cast": {
+            "users": {
+              "type": "users",
+              "x": 0,
+              "y": -20,
+              "s": 7,
+              "count": 14,
+              "label": "mobile app"
+            },
+            "api": {
+              "type": "service",
+              "x": -8,
+              "y": -8,
+              "color": "orange",
+              "icon": "server",
+              "label": [
+                "Upload",
+                "API"
+              ]
+            },
+            "store": {
+              "type": "service",
+              "x": 0,
+              "y": 4,
+              "color": "yellow",
+              "icon": "boxes",
+              "label": [
+                "Object",
+                "Storage"
+              ]
+            },
+            "db": {
+              "type": "db",
+              "x": -17,
+              "y": -8,
+              "label": "photos table"
+            },
+            "queue": {
+              "type": "queue",
+              "x": 10,
+              "y": 4,
+              "dir": [
+                1,
+                0
+              ],
+              "n": 3,
+              "label": "resize jobs"
+            },
+            "worker": {
+              "type": "service",
+              "x": 19.5,
+              "y": 4,
+              "color": "green",
+              "icon": "image",
+              "label": [
+                "Thumbnail",
+                "Worker"
+              ]
+            },
+            "dlq": {
+              "type": "queue",
+              "x": 19.5,
+              "y": 14,
+              "dir": [
+                0,
+                1
+              ],
+              "n": 2,
+              "color": "red",
+              "label": "dead letters",
+              "icon": "skull"
+            },
+            "cdn": {
+              "type": "service",
+              "x": -10,
+              "y": 11,
+              "s": 3.6,
+              "color": "teal",
+              "icon": "globe",
+              "label": [
+                "CDN"
+              ]
+            }
+          },
+          "wires": {
+            "ua": {
+              "from": "users",
+              "to": "api",
+              "heads": "both"
+            },
+            "as": {
+              "from": "api",
+              "to": "store",
+              "heads": "both"
+            },
+            "us": {
+              "from": "users",
+              "to": "store",
+              "heads": "both",
+              "label": "PUT signed URL"
+            },
+            "ad": {
+              "from": "api",
+              "to": "db",
+              "heads": "both"
+            },
+            "sq": {
+              "from": "store",
+              "to": "queue",
+              "label": "object created"
+            },
+            "qw": {
+              "from": "queue",
+              "to": "worker",
+              "heads": "both"
+            },
+            "ws": {
+              "from": "worker",
+              "to": "store",
+              "via": [
+                [
+                  14,
+                  8.5
+                ]
+              ],
+              "label": "thumbnails"
+            },
+            "wd": {
+              "from": "worker",
+              "to": "dlq",
+              "style": "dashed"
+            },
+            "uc": {
+              "from": "users",
+              "to": "cdn",
+              "heads": "both",
+              "label": "GET /photos/…"
+            },
+            "cs": {
+              "from": "cdn",
+              "to": "store",
+              "heads": "both",
+              "style": "dashed",
+              "label": "cache miss",
+              "labelAt": 0.35
+            }
+          },
+          "steps": [
+            {
+              "short": "Proxy",
+              "chapter": "problem",
+              "title": "Every photo goes through the API",
+              "body": [
+                "Today the app sends the full photo — about <b>8 MB</b> — to the Upload API, which streams it on to object storage.",
+                "Each upload holds an API worker for the whole transfer. On a slow phone network that's 10+ seconds, so a busy evening fills every worker and even small requests start timing out."
+              ],
+              "callout": {
+                "kind": "warn",
+                "text": "When the API carries bytes it doesn't need to look at, its capacity is set by your users' network speed, not by your code."
+              },
+              "metrics": {
+                "p99": 9200,
+                "ok": 91,
+                "cpu": 94,
+                "lag": "—"
+              },
+              "scene": {
+                "entities": {
+                  "users": true,
+                  "api": {
+                    "heat": 0.85,
+                    "cpu": 0.94,
+                    "tags": [
+                      {
+                        "text": "streaming 8 MB bodies",
+                        "tone": "red",
+                        "icon": "hourglass"
+                      }
+                    ]
+                  },
+                  "store": true
+                },
+                "links": {
+                  "ua": {
+                    "label": "POST /photos (8 MB)",
+                    "labelTone": "red",
+                    "fail": 0.15
+                  },
+                  "as": true
+                },
+                "flows": [
+                  {
+                    "route": [
+                      "ua",
+                      "as"
+                    ],
+                    "kind": "heavy",
+                    "rate": 1.6,
+                    "bounce": true
+                  }
+                ]
+              }
+            },
+            {
+              "short": "Presign",
+              "chapter": "solution",
+              "title": "Hand out a presigned URL instead",
+              "body": [
+                "The app now asks the API for permission first. The API checks the user and returns a <span class=\"term\">presigned URL</span>: a storage address that accepts one upload, for one key, for five minutes.",
+                "The bytes then go <b>straight to storage</b>. The API only handles tiny JSON requests."
+              ],
+              "callout": {
+                "kind": "tip",
+                "text": "Sign only what you need: fixed key, content-type and a max size. A leaked URL then can't be used to upload anything else."
+              },
+              "changes": [
+                "+ POST /uploads returns a signed URL",
+                "~ Bytes go app → storage directly",
+                "~ API CPU 94% → 22%"
+              ],
+              "metrics": {
+                "p99": 2600,
+                "ok": 98,
+                "cpu": 22,
+                "lag": "—"
+              },
+              "scene": {
+                "entities": {
+                  "users": true,
+                  "api": {
+                    "cpu": 0.22
+                  },
+                  "store": true
+                },
+                "links": {
+                  "ua": {
+                    "label": "POST /uploads"
+                  },
+                  "us": true
+                },
+                "flows": [
+                  {
+                    "route": [
+                      "ua"
+                    ],
+                    "rate": 1.4,
+                    "bounce": true
+                  },
+                  {
+                    "route": [
+                      "us"
+                    ],
+                    "kind": "heavy",
+                    "rate": 1.4,
+                    "bounce": true
+                  }
+                ],
+                "card": {
+                  "title": "The new upload handshake",
+                  "icon": "key",
+                  "lines": [
+                    "1  POST /uploads        → { url, key, expires: 5 min }",
+                    "2  PUT  <signed url>    → 200  (8 MB, app → storage)",
+                    "3  POST /uploads/:key/complete",
+                    "# the API never touches the photo bytes"
+                  ]
+                }
+              }
+            },
+            {
+              "short": "Metadata",
+              "chapter": "technique",
+              "title": "Record the upload before it happens",
+              "body": [
+                "When it signs the URL, the API also inserts a row: <code>status = pending</code>. When the app calls <code>/complete</code>, the API checks the object really exists and flips it to <code>uploaded</code>.",
+                "Now every photo has a single source of truth, even if the app crashes halfway."
+              ],
+              "callout": {
+                "kind": "insight",
+                "text": "Never trust the client's “done” — verify the object (size, type) in storage before marking it uploaded."
+              },
+              "changes": [
+                "+ photos table (pending → uploaded)",
+                "+ /complete verifies the object"
+              ],
+              "metrics": {
+                "p99": 2600,
+                "ok": 99,
+                "cpu": 24,
+                "lag": "—"
+              },
+              "scene": {
+                "entities": {
+                  "users": true,
+                  "api": {
+                    "cpu": 0.24
+                  },
+                  "store": true,
+                  "db": {
+                    "tags": [
+                      {
+                        "text": "status: pending → uploaded",
+                        "tone": "amber",
+                        "icon": "clock"
+                      }
+                    ]
+                  }
+                },
+                "links": {
+                  "ua": {
+                    "label": "POST /uploads"
+                  },
+                  "us": true,
+                  "ad": {
+                    "label": "INSERT · UPDATE"
+                  }
+                },
+                "flows": [
+                  {
+                    "route": [
+                      "ua",
+                      "ad"
+                    ],
+                    "rate": 1.2,
+                    "bounce": true
+                  },
+                  {
+                    "route": [
+                      "us"
+                    ],
+                    "kind": "heavy",
+                    "rate": 1.2,
+                    "bounce": true
+                  }
+                ]
+              }
+            },
+            {
+              "short": "Thumbnails",
+              "chapter": "technique",
+              "title": "Make thumbnails in the background",
+              "body": [
+                "The feed needs small versions of every photo. Instead of resizing during the upload, storage emits an <span class=\"term\">object-created event</span> into a queue.",
+                "A thumbnail worker pulls jobs, writes 3 sizes back to storage and marks the photo <code>ready</code>. Uploads finish as soon as the bytes land."
+              ],
+              "callout": {
+                "kind": "tip",
+                "text": "The queue absorbs bursts: 10,000 uploads at 9 pm just means a longer queue for a minute, not a slower upload."
+              },
+              "changes": [
+                "+ Event → resize queue",
+                "+ Thumbnail worker (3 sizes)",
+                "~ Upload p99 2.6 s → 1.4 s"
+              ],
+              "metrics": {
+                "p99": 1400,
+                "ok": 99,
+                "cpu": 24,
+                "lag": {
+                  "value": "~4 s",
+                  "level": "good"
+                }
+              },
+              "scene": {
+                "entities": {
+                  "users": true,
+                  "api": {
+                    "cpu": 0.24
+                  },
+                  "store": true,
+                  "db": true,
+                  "queue": true,
+                  "worker": {
+                    "cpu": 0.45
+                  }
+                },
+                "links": {
+                  "ua": true,
+                  "us": true,
+                  "ad": true,
+                  "sq": true,
+                  "qw": true,
+                  "ws": true
+                },
+                "flows": [
+                  {
+                    "route": [
+                      "us"
+                    ],
+                    "kind": "heavy",
+                    "rate": 1,
+                    "bounce": true
+                  },
+                  {
+                    "route": [
+                      "sq",
+                      "qw"
+                    ],
+                    "kind": "msg",
+                    "rate": 1
+                  },
+                  {
+                    "route": [
+                      "ws"
+                    ],
+                    "kind": "write",
+                    "rate": 1
+                  }
+                ]
+              }
+            },
+            {
+              "short": "Crash",
+              "chapter": "problem",
+              "title": "A bad photo crashes the worker",
+              "body": [
+                "One corrupted HEIC file makes the resize library crash. The worker restarts, takes the <b>same</b> job, and crashes again — forever.",
+                "Meanwhile the queue keeps growing. Uploads still succeed, but nobody's photos get thumbnails."
+              ],
+              "callout": {
+                "kind": "warn",
+                "text": "A single “poison message” can stall a whole queue if every failure is retried immediately and indefinitely."
+              },
+              "changes": [
+                "− Worker crash-looping",
+                "~ Queue backlog 0 → 12k",
+                "~ Thumbnails stuck"
+              ],
+              "metrics": {
+                "p99": 1400,
+                "ok": 99,
+                "cpu": 24,
+                "lag": {
+                  "value": "stuck",
+                  "level": "bad"
+                }
+              },
+              "scene": {
+                "entities": {
+                  "users": true,
+                  "api": {
+                    "cpu": 0.24
+                  },
+                  "store": true,
+                  "db": true,
+                  "queue": {
+                    "n": 5,
+                    "tags": [
+                      {
+                        "text": "backlog 12k",
+                        "tone": "red",
+                        "icon": "alert"
+                      }
+                    ]
+                  },
+                  "worker": {
+                    "dead": 1,
+                    "tags": [
+                      {
+                        "text": "crash loop · same job",
+                        "tone": "red",
+                        "icon": "skull"
+                      }
+                    ]
+                  }
+                },
+                "links": {
+                  "ua": true,
+                  "us": true,
+                  "ad": true,
+                  "sq": true,
+                  "qw": {
+                    "fail": 1
+                  }
+                },
+                "flows": [
+                  {
+                    "route": [
+                      "us"
+                    ],
+                    "kind": "heavy",
+                    "rate": 1,
+                    "bounce": true
+                  },
+                  {
+                    "route": [
+                      "sq"
+                    ],
+                    "kind": "msg",
+                    "rate": 1.6
+                  },
+                  {
+                    "route": [
+                      "qw"
+                    ],
+                    "kind": "retry",
+                    "rate": 2.2
+                  }
+                ]
+              }
+            },
+            {
+              "short": "Retry + DLQ",
+              "chapter": "solution",
+              "title": "Back off, then park the poison",
+              "body": [
+                "Failed jobs are retried with <span class=\"term\">exponential backoff</span> — 10 s, 1 min, 5 min. Most real failures (a storage blip) pass on retry.",
+                "After 3 attempts the job moves to a <span class=\"term\">dead-letter queue</span>, so it stops blocking everyone else. An alert fires and a human looks at it."
+              ],
+              "callout": {
+                "kind": "insight",
+                "text": "Retries handle transient errors; the dead-letter queue handles permanent ones. You need both."
+              },
+              "changes": [
+                "+ Max 3 attempts with backoff",
+                "+ Dead-letter queue + alert",
+                "~ Backlog 12k → 0 in 6 min"
+              ],
+              "metrics": {
+                "p99": 1400,
+                "ok": 99,
+                "cpu": 24,
+                "lag": {
+                  "value": "~4 s",
+                  "level": "good"
+                }
+              },
+              "scene": {
+                "entities": {
+                  "users": true,
+                  "api": {
+                    "cpu": 0.24
+                  },
+                  "store": true,
+                  "db": true,
+                  "queue": {
+                    "n": 2
+                  },
+                  "worker": {
+                    "cpu": 0.7,
+                    "tags": [
+                      {
+                        "text": "max 3 attempts",
+                        "tone": "green",
+                        "icon": "repeat"
+                      }
+                    ]
+                  },
+                  "dlq": {
+                    "tags": [
+                      {
+                        "text": "1 poison photo",
+                        "tone": "amber",
+                        "icon": "bell"
+                      }
+                    ]
+                  }
+                },
+                "links": {
+                  "ua": true,
+                  "us": true,
+                  "ad": true,
+                  "sq": true,
+                  "qw": true,
+                  "ws": true,
+                  "wd": {
+                    "label": "after 3 fails"
+                  }
+                },
+                "flows": [
+                  {
+                    "route": [
+                      "sq",
+                      "qw"
+                    ],
+                    "kind": "msg",
+                    "rate": 1.6
+                  },
+                  {
+                    "route": [
+                      "ws"
+                    ],
+                    "kind": "write",
+                    "rate": 1.4
+                  },
+                  {
+                    "route": [
+                      "wd"
+                    ],
+                    "kind": "msg",
+                    "rate": 0.25
+                  }
+                ],
+                "card": {
+                  "title": "One job, with backoff",
+                  "icon": "timer",
+                  "bars": [
+                    {
+                      "label": "attempt 1",
+                      "from": 0,
+                      "to": 0.06,
+                      "tone": "red",
+                      "note": "crash"
+                    },
+                    {
+                      "label": "attempt 2",
+                      "from": 0.16,
+                      "to": 0.22,
+                      "tone": "red",
+                      "note": "+10 s"
+                    },
+                    {
+                      "label": "attempt 3",
+                      "from": 0.5,
+                      "to": 0.56,
+                      "tone": "red",
+                      "note": "+1 min"
+                    },
+                    {
+                      "label": "dead-letter",
+                      "from": 0.74,
+                      "to": 0.8,
+                      "tone": "amber",
+                      "note": "alert"
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "short": "CDN",
+              "chapter": "technique",
+              "title": "Serve photos from a CDN",
+              "body": [
+                "Viewing is 50× more common than uploading. Photos are now served by a <span class=\"term\">CDN</span> with long cache headers — the key includes a content hash, so a URL never changes meaning.",
+                "Most views never reach storage; only cache misses do."
+              ],
+              "callout": {
+                "kind": "tip",
+                "text": "Immutable, hashed URLs let you cache for a year and still “update” a photo — by giving it a new URL."
+              },
+              "changes": [
+                "+ CDN in front of storage",
+                "~ 96% of views are cache hits"
+              ],
+              "metrics": {
+                "p99": 1400,
+                "ok": 99,
+                "cpu": 20,
+                "lag": {
+                  "value": "~4 s",
+                  "level": "good"
+                }
+              },
+              "scene": {
+                "entities": {
+                  "users": true,
+                  "api": {
+                    "cpu": 0.2
+                  },
+                  "store": true,
+                  "db": true,
+                  "queue": true,
+                  "worker": {
+                    "cpu": 0.45
+                  },
+                  "cdn": {
+                    "tags": [
+                      {
+                        "text": "hit rate 96%",
+                        "tone": "green",
+                        "icon": "zap"
+                      }
+                    ]
+                  }
+                },
+                "links": {
+                  "ua": true,
+                  "us": true,
+                  "ad": true,
+                  "sq": true,
+                  "qw": true,
+                  "ws": true,
+                  "uc": true,
+                  "cs": true
+                },
+                "flows": [
+                  {
+                    "route": [
+                      "uc"
+                    ],
+                    "rate": 2.4,
+                    "bounce": true
+                  },
+                  {
+                    "route": [
+                      "cs"
+                    ],
+                    "rate": 0.3,
+                    "bounce": true
+                  },
+                  {
+                    "route": [
+                      "us"
+                    ],
+                    "kind": "heavy",
+                    "rate": 0.6,
+                    "bounce": true
+                  },
+                  {
+                    "route": [
+                      "sq",
+                      "qw"
+                    ],
+                    "kind": "msg",
+                    "rate": 0.6
+                  }
+                ]
+              }
+            },
+            {
+              "short": "Trade-off",
+              "chapter": "tradeoff",
+              "title": "Thumbnails arrive a moment later",
+              "body": [
+                "Because resizing is asynchronous, a photo is visible a few seconds before its thumbnails exist. The feed shows a blurred placeholder (generated on the phone) until the photo is <code>ready</code>.",
+                "We accepted this: a 4-second placeholder is far better than a 9-second upload spinner."
+              ],
+              "callout": {
+                "kind": "decision",
+                "text": "Chosen: async + placeholder. Rejected: resizing inside the upload request (slower uploads, API back on the hot path)."
+              },
+              "changes": [
+                "+ Client-side blur placeholder",
+                "~ Feed polls status until ready"
+              ],
+              "metrics": {
+                "p99": 1400,
+                "ok": 99,
+                "cpu": 20,
+                "lag": {
+                  "value": "~4 s",
+                  "level": "warn"
+                }
+              },
+              "scene": {
+                "entities": {
+                  "users": true,
+                  "api": {
+                    "cpu": 0.2
+                  },
+                  "store": true,
+                  "db": true,
+                  "queue": true,
+                  "worker": {
+                    "cpu": 0.45
+                  },
+                  "cdn": {
+                    "tags": [
+                      {
+                        "text": "blur placeholder first",
+                        "tone": "amber",
+                        "icon": "image"
+                      }
+                    ]
+                  }
+                },
+                "links": {
+                  "ua": {
+                    "label": "GET status"
+                  },
+                  "us": true,
+                  "ad": true,
+                  "sq": true,
+                  "qw": true,
+                  "ws": true,
+                  "uc": true
+                },
+                "flows": [
+                  {
+                    "route": [
+                      "ua",
+                      "ad"
+                    ],
+                    "kind": "req",
+                    "rate": 1,
+                    "bounce": true
+                  },
+                  {
+                    "route": [
+                      "sq",
+                      "qw"
+                    ],
+                    "kind": "msg",
+                    "rate": 0.8
+                  },
+                  {
+                    "route": [
+                      "ws"
+                    ],
+                    "kind": "write",
+                    "rate": 0.8
+                  }
+                ],
+                "card": {
+                  "title": "One upload, end to end",
+                  "icon": "clock",
+                  "bars": [
+                    {
+                      "label": "sign URL",
+                      "from": 0,
+                      "to": 0.04,
+                      "tone": "blue",
+                      "note": "40 ms"
+                    },
+                    {
+                      "label": "upload",
+                      "from": 0.04,
+                      "to": 0.32,
+                      "tone": "amber",
+                      "note": "1.4 s"
+                    },
+                    {
+                      "label": "queue",
+                      "from": 0.32,
+                      "to": 0.4,
+                      "tone": "gray"
+                    },
+                    {
+                      "label": "resize",
+                      "from": 0.4,
+                      "to": 0.8,
+                      "tone": "green",
+                      "note": "ready ✓"
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "short": "Recap",
+              "chapter": "recap",
+              "title": "Recap",
+              "body": [
+                "<ul class=\"takeaways\"><li>Keep large bytes <b>off the API</b>: presigned URLs, scoped and short-lived.</li><li>Track every upload with a <b>status row</b> and verify on complete.</li><li>Do slow work <b>asynchronously</b> behind a queue.</li><li>Retry with <b>backoff</b>; park poison jobs in a <b>DLQ</b>.</li><li>Serve reads from a <b>CDN</b> with immutable URLs.</li></ul>"
+              ],
+              "callout": {
+                "kind": "next",
+                "text": "Next up: <b>Moderation</b> — scanning photos before they appear in the feed."
+              },
+              "metrics": {
+                "p99": 1400,
+                "ok": 99,
+                "cpu": 20,
+                "lag": {
+                  "value": "~4 s",
+                  "level": "good"
+                }
+              },
+              "scene": {
+                "entities": {
+                  "users": true,
+                  "api": {
+                    "cpu": 0.2
+                  },
+                  "store": true,
+                  "db": true,
+                  "queue": true,
+                  "worker": {
+                    "cpu": 0.45
+                  },
+                  "dlq": true,
+                  "cdn": true
+                },
+                "links": {
+                  "ua": true,
+                  "us": true,
+                  "ad": true,
+                  "sq": true,
+                  "qw": true,
+                  "ws": true,
+                  "wd": true,
+                  "uc": true,
+                  "cs": true
+                },
+                "flows": [
+                  {
+                    "route": [
+                      "uc"
+                    ],
+                    "rate": 1.6,
+                    "bounce": true
+                  },
+                  {
+                    "route": [
+                      "us"
+                    ],
+                    "kind": "heavy",
+                    "rate": 0.6,
+                    "bounce": true
+                  },
+                  {
+                    "route": [
+                      "sq",
+                      "qw"
+                    ],
+                    "kind": "msg",
+                    "rate": 0.6
+                  },
+                  {
+                    "route": [
+                      "ws"
+                    ],
+                    "kind": "write",
+                    "rate": 0.6
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
